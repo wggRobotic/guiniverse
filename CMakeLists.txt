@@ -1,5 +1,8 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10)
 project(guiniverse)
+
+cmake_policy(SET CMP0072 NEW)
+set(OpenGL_GL_PREFERENCE GLVND)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,20 +10,44 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+find_package(OpenGL REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GLEW REQUIRED glew)
+
+# GLFW hinzufügen
+add_subdirectory(lib/glfw)
+
+# ImGui hinzufügen
+add_library(imgui STATIC
+  lib/imgui/imgui.cpp
+  lib/imgui/imgui_draw.cpp
+  lib/imgui/imgui_tables.cpp
+  lib/imgui/imgui_widgets.cpp
+  lib/imgui/backends/imgui_impl_opengl3.cpp
+  lib/imgui/backends/imgui_impl_glfw.cpp
+)
+
+# Include-Verzeichnisse
+target_include_directories(imgui PUBLIC
+  lib/imgui
+  lib/imgui/backends
+  ${CMAKE_SOURCE_DIR}/lib/glfw/include
+)
+
+# Hauptprogramm
+add_executable(main src/main.cpp)
+
+# Abhängigkeiten verlinken
+target_link_libraries(main
+  imgui
+  glfw
+  OpenGL::GL
+  ${GLEW_LIBRARIES}
+)
+
+install(TARGETS main
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
