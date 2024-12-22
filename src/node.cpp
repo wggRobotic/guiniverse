@@ -32,6 +32,7 @@ public:
 private:
     void timer_callback() {
         RCLCPP_INFO(this->get_logger(), "Timer callback called. Count: %d", count_++);
+        running_.store(running);
     }
 
     rclcpp::TimerBase::SharedPtr timer_;
