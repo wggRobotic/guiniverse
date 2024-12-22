@@ -32,33 +32,21 @@ add_library(imgui STATIC
 )
 
 # Include directories for ImGui
-target_include_directories(imgui PUBLIC
-  lib/imgui
-  lib/imgui/backends
-  ${CMAKE_SOURCE_DIR}/lib/glfw/include
-)
+target_include_directories(imgui PUBLIC lib/imgui)
 
 # Link OpenGL and GLFW libraries with ImGui
 target_link_libraries(imgui
   OpenGL::GL
-  glfw
   ${GLEW_LIBRARIES}
+  glfw
 )
 
 # Add main executable
-add_executable(main src/main.cpp)
+file(GLOB_RECURSE src src/*.cpp)
+add_executable(main ${src})
 
 # Include directories for main executable
-target_include_directories(main PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# Include directories for ROS2 integration
-target_include_directories(main PUBLIC
-  lib/imgui
-  ${CMAKE_SOURCE_DIR}/lib/glfw/include
-  ${CMAKE_SOURCE_DIR}/include
-)
+target_include_directories(main PRIVATE include)
 
 # ROS2 dependencies
 ament_target_dependencies(main
@@ -67,10 +55,10 @@ ament_target_dependencies(main
 
 # Link libraries to the main executable
 target_link_libraries(main
-  imgui
   glfw
   OpenGL::GL
   ${GLEW_LIBRARIES}
+  imgui
 )
 
 # Install target
