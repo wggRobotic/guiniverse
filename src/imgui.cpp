@@ -84,7 +84,7 @@ void imgui_thread()
         }
         ImGui::End();
 
-        if(ImGui::Begin("Controller")){
+        if(ImGui::Begin("Control")){
         }
         ImGui::End();
 
@@ -96,8 +96,8 @@ void imgui_thread()
         }
         ImGui::End();
 
-
-        if(ImGui::Begin("Gripper")){
+        
+        if(ImGui::Begin("Visualization")){
         }
         ImGui::End();
 
