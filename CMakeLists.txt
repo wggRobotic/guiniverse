@@ -12,6 +12,14 @@ endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(cv_bridge REQUIRED)
+find_package(image_transport REQUIRED)
+find_package(compressed_image_transport REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -51,6 +59,14 @@ target_include_directories(main PRIVATE include)
 # ROS2 dependencies
 ament_target_dependencies(main
   rclcpp
+  std_msgs
+  sensor_msgs
+  geometry_msgs
+  OpenCV
+  cv_bridge
+  image_transport
+  compressed_image_transport
+  std_srvs
 )
 
 # Link libraries to the main executable

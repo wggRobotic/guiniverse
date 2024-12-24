@@ -48,7 +48,7 @@ void imgui_thread()
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     // io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    //set_style();
+    // set_style();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 130");
@@ -75,7 +75,7 @@ void imgui_thread()
             display_data = shared_data;
         }
 
-        if(ImGui::Begin("Home"))
+        if (ImGui::Begin("Home"))
         {
             ImGui::Text("Shared Data: %s", display_data.c_str());
             ImGui::ColorEdit4("Clear Color", clear_color);
@@ -83,20 +83,23 @@ void imgui_thread()
         }
         ImGui::End();
 
-        if(ImGui::Begin("Control")){
+        if (ImGui::Begin("Control"))
+        {
         }
         ImGui::End();
 
-        if(ImGui::Begin("Camera")){
+        if (ImGui::Begin("Camera"))
+        {
         }
         ImGui::End();
 
-        if(ImGui::Begin("Sensor Data")){
+        if (ImGui::Begin("Sensor Data"))
+        {
         }
         ImGui::End();
 
-        
-        if(ImGui::Begin("Visualization")){
+        if (ImGui::Begin("Visualization"))
+        {
         }
         ImGui::End();
 
