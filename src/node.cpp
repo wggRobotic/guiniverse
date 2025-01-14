@@ -1,41 +1,119 @@
-#include <guiniverse/ros2_imgui_integration.hpp>
-#include <guiniverse/node.hpp>
+// node.cpp
+
 #include <rclcpp/rclcpp.hpp>
 #include <chrono>
+#include <mutex>
+#include <map>
+#include <vector>
+#include <opencv2/opencv.hpp>
+#include <sensor_msgs/msg/image.hpp>
+#include <guiniverse/shared_data.hpp>
+#include <guiniverse/node.hpp>
 
 using namespace std::chrono_literals;
+
+#define MAKE_CALLBACK(INDEX) [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr &msg) { SetImage(INDEX, msg->data, msg->width, msg->height, msg->step, msg->encoding); }
+
+
+std::mutex twist_mutex;
+geometry_msgs::msg::Twist shared_twist;
+
+std::mutex gripper_mutex;
+std_msgs::msg::Float32MultiArray shared_gripper;
+
+std::mutex barcode_mutex;
+std::map<std::string, size_t> shared_barcodes;
+
+std::mutex shared_data_mutex;
+std::string shared_data;
+
+std::mutex image_topics_mutex;
+std::vector<std::string> shared_image_topics = {"n10/front/color", "n10/rear/color", "n10/gripper/color"};
+
+std::mutex image_mutex;
+std::vector<cv::Mat> shared_image_data;
 
 GuiniverseNode::GuiniverseNode()
     : Node("guiniverse"), count_(0), running_(true)
 {
-    // Initialize timer
-    m_Timer = this->create_wall_timer(
-        500ms, std::bind(&GuiniverseNode::TimerCallback, this));
-
-    // Initialize publishers
+    m_Timer = this->create_wall_timer(500ms, std::bind(&GuiniverseNode::TimerCallback, this));
     m_TwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     m_GripperPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>("gripper", 10);
 
-    // Initialize subscribers
     m_BarcodeSubscriber = this->create_subscription<std_msgs::msg::String>(
         "barcode", 10, std::bind(&GuiniverseNode::BarcodeCallback, this, std::placeholders::_1));
 
-    // Initialize service client
     m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("enable_motor");
+}
+
+void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
+{
+    // Lock the mutexes to ensure thread safety
+    std::lock_guard<std::mutex> topics_lock(image_topics_mutex);
+    std::lock_guard<std::mutex> data_lock(image_mutex);
+
+    // Check if the index is valid
+    if (index >= shared_image_data.size())
+    {
+        std::cerr << "Index out of range: " << index << std::endl;
+        return;
+    }
+
+    // Determine the OpenCV encoding type
+    int cv_type;
+    if (encoding == "mono8")
+    {
+        cv_type = CV_8UC1; // One channel, 8-bit
+    }
+    else if (encoding == "bgr8")
+    {
+        cv_type = CV_8UC3; // Three channels (BGR), 8-bit
+    }
+    else if (encoding == "rgba8")
+    {
+        cv_type = CV_8UC4; // Four channels (RGBA), 8-bit
+    }
+    else
+    {
+        std::cerr << "Unsupported encoding: " << encoding << std::endl;
+        return;
+    }
+
+    // Create a cv::Mat object and assign the data
+    cv::Mat image(height, width, cv_type, const_cast<uint8_t *>(data.data()), step);
+
+    // Store the image in shared_image_data
+    shared_image_data[index] = image.clone(); // clone() ensures independent memory management
+}
+
+void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it)
+{
+    std::lock_guard<std::mutex> lock_image_topics(image_topics_mutex);
+    std::lock_guard<std::mutex> lock_image_data(image_mutex);
+    image_subscribers.resize(shared_image_topics.size());
+    shared_image_data.resize(shared_image_topics.size());
+    for (size_t i = 0; i < shared_image_topics.size(); i++)
+    {
+        image_subscribers[i]= it.subscribe(
+            shared_image_topics.at(i), 10, MAKE_CALLBACK(i));
+    }
 }
 
 void GuiniverseNode::run()
 {
-    rclcpp::Rate rate(10); // 10 Hz loop rate
+    rclcpp::Rate rate(10);
     while (rclcpp::ok() && running_)
     {
         {
-            // Lock the mutex to safely access shared data
-            std::lock_guard<std::mutex> lock(data_mutex);
+            std::lock_guard<std::mutex> lock(shared_data_mutex);
             shared_data = "ROS2 is running: " + std::to_string(this->now().seconds());
         }
 
-        // Execute ROS2 callbacks
+        if (!running)
+        {
+            running_ = running;
+        }
+
         rclcpp::spin_some(shared_from_this());
         rate.sleep();
     }
@@ -43,57 +121,25 @@ void GuiniverseNode::run()
 
 void GuiniverseNode::BarcodeCallback(const StringConstPtr &msg)
 {
-    // Update barcode information in a thread-safe way
-    {
-        std::lock_guard<std::mutex> lock(data_mutex);
-        RCLCPP_INFO(this->get_logger(), "Received barcode: %s", msg->data.c_str());
-        m_Barcodes[msg->data]++;
-    }
+    std::lock_guard<std::mutex> lock(barcode_mutex);
+    shared_barcodes[msg->data]++;
 }
 
 void GuiniverseNode::TimerCallback()
 {
-    // Periodically execute logic for motor control or robot updates
-    RCLCPP_INFO(this->get_logger(), "Timer callback called. Count: %d", count_++);
-
-    // Example: Publish a simple Twist message
-    m_TwistMessage.linear.x = 0.1;
-    m_TwistPublisher->publish(m_TwistMessage);
-
-    // Check if motor status needs to be updated
-    if (m_ShouldSetMotorStatusTrue || m_ShouldSetMotorStatusFalse)
     {
-        SetMotorStatus(m_ShouldSetMotorStatusTrue);
+        std::lock_guard<std::mutex> lock(twist_mutex);
+        shared_twist = m_TwistMessage;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(gripper_mutex);
+        shared_gripper = m_GripperMessage;
     }
 }
 
 void GuiniverseNode::SetMotorStatus(bool status)
 {
-    // Prevent simultaneous motor status updates
-    if (m_SetMotorStatusLock)
-    {
-        return;
-    }
-
-    m_SetMotorStatusLock = true;
-
-    // Create service request to change motor status
-    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-    request->data = status;
-
-    // Send service request and process the response
-    auto future = m_EnableMotorClient->async_send_request(request);
-    future.wait();
-
-    auto response = future.get();
-    if (response->success)
-    {
-        RCLCPP_INFO(this->get_logger(), "Motor status set to: %s", status ? "true" : "false");
-    }
-    else
-    {
-        RCLCPP_WARN(this->get_logger(), "Failed to set motor status");
-    }
-
-    m_SetMotorStatusLock = false;
+    std::lock_guard<std::mutex> lock(shared_data_mutex);
+    shared_data = status ? "Motors Enabled" : "Motors Disabled";
 }

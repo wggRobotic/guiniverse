@@ -1,4 +1,10 @@
-#include <guiniverse/ros2_imgui_integration.hpp>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+
+#include <guiniverse/shared_data.hpp>
 
 static void set_style()
 {
@@ -71,7 +77,7 @@ void imgui_thread()
         // Lock shared data for safe access
         std::string display_data;
         {
-            std::lock_guard<std::mutex> lock(data_mutex);
+            std::lock_guard<std::mutex> lock();
             display_data = shared_data;
         }
 
