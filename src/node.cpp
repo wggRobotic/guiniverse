@@ -1,5 +1,3 @@
-// node.cpp
-
 #include <rclcpp/rclcpp.hpp>
 #include <chrono>
 #include <mutex>
@@ -45,33 +43,28 @@ GuiniverseNode::GuiniverseNode()
 
     m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("enable_motor");
 }
-
 void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
 {
-    // Lock the mutexes to ensure thread safety
-    std::lock_guard<std::mutex> topics_lock(image_topics_mutex);
     std::lock_guard<std::mutex> data_lock(image_mutex);
 
-    // Check if the index is valid
     if (index >= shared_image_data.size())
     {
         std::cerr << "Index out of range: " << index << std::endl;
         return;
     }
 
-    // Determine the OpenCV encoding type
     int cv_type;
     if (encoding == "mono8")
     {
-        cv_type = CV_8UC1; // One channel, 8-bit
+        cv_type = CV_8UC1;
     }
     else if (encoding == "bgr8")
     {
-        cv_type = CV_8UC3; // Three channels (BGR), 8-bit
+        cv_type = CV_8UC3;
     }
     else if (encoding == "rgba8")
     {
-        cv_type = CV_8UC4; // Four channels (RGBA), 8-bit
+        cv_type = CV_8UC4;
     }
     else
     {
@@ -79,25 +72,30 @@ void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, ui
         return;
     }
 
-    // Create a cv::Mat object and assign the data
     cv::Mat image(height, width, cv_type, const_cast<uint8_t *>(data.data()), step);
-
-    // Store the image in shared_image_data
-    shared_image_data[index] = image.clone(); // clone() ensures independent memory management
+    shared_image_data[index] = image.clone();
 }
+
 
 void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it)
 {
-    std::lock_guard<std::mutex> lock_image_topics(image_topics_mutex);
-    std::lock_guard<std::mutex> lock_image_data(image_mutex);
-    image_subscribers.resize(shared_image_topics.size());
-    shared_image_data.resize(shared_image_topics.size());
+    {
+        std::lock_guard<std::mutex> lock_image_topics(image_topics_mutex);
+        image_subscribers.resize(shared_image_topics.size());
+    }
+
+    {
+        std::lock_guard<std::mutex> lock_image_data(image_mutex);
+        shared_image_data.resize(shared_image_topics.size());
+    }
+
     for (size_t i = 0; i < shared_image_topics.size(); i++)
     {
-        image_subscribers[i]= it.subscribe(
+        image_subscribers[i] = it.subscribe(
             shared_image_topics.at(i), 10, MAKE_CALLBACK(i));
     }
 }
+
 
 void GuiniverseNode::run()
 {
@@ -125,6 +123,7 @@ void GuiniverseNode::BarcodeCallback(const StringConstPtr &msg)
     shared_barcodes[msg->data]++;
 }
 
+
 void GuiniverseNode::TimerCallback()
 {
     {
@@ -137,6 +136,7 @@ void GuiniverseNode::TimerCallback()
         shared_gripper = m_GripperMessage;
     }
 }
+
 
 void GuiniverseNode::SetMotorStatus(bool status)
 {
