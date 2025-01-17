@@ -8,6 +8,7 @@
 
 int selectedImageIndex = 0;
 GLuint currentTexture = 0;
+std::vector<cv::Mat> display_image_data;
 
 static void set_style()
 {
@@ -20,10 +21,8 @@ GLuint convertToTexture(const cv::Mat &image)
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
 
-    // OpenCV-Bilddaten verwenden
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.cols, image.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, image.data);
 
-    // Texturparameter setzen
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -42,21 +41,18 @@ static void on_key(GLFWwindow *window, int key, int scancode, int action, int mo
 
 void updateTexture()
 {
-    // Lösche vorherige Textur, falls vorhanden
     if (currentTexture != 0)
     {
         glDeleteTextures(1, &currentTexture);
         currentTexture = 0;
     }
 
-    // Lock shared_image_data und lade neue Textur
-    {
-        std::lock_guard<std::mutex> lock(image_mutex);
-        if (selectedImageIndex < shared_image_data.size())
+    
+        if (selectedImageIndex < display_image_data.size())
         {
-            currentTexture = convertToTexture(shared_image_data[selectedImageIndex]);
+            currentTexture = convertToTexture(display_image_data[selectedImageIndex]);
         }
-    }
+    
 }
 
 void imgui_thread()
@@ -124,9 +120,8 @@ void imgui_thread()
         {
             if (ImGui::BeginCombo("Select Image", ("Image " + std::to_string(selectedImageIndex)).c_str()))
             {
-                std::lock_guard<std::mutex> lock(image_mutex);
 
-                for (size_t i = 0; i < shared_image_data.size(); i++)
+                for (size_t i = 0; i < display_image_data.size(); i++)
                 {
                     const bool isSelected = (selectedImageIndex == i);
                     if (ImGui::Selectable(("Image " + std::to_string(i)).c_str(), isSelected))
@@ -144,10 +139,9 @@ void imgui_thread()
 
             if (currentTexture != 0)
             {
-                std::lock_guard<std::mutex> lock(image_mutex);
-                if (selectedImageIndex < shared_image_data.size())
+                if (selectedImageIndex < display_image_data.size())
                 {
-                    auto &image = shared_image_data[selectedImageIndex];
+                    auto &image = display_image_data[selectedImageIndex];
                     ImVec2 widget_size = ImGui::GetContentRegionAvail();
 
                     float image_aspect = static_cast<float>(image.cols) / image.rows;
@@ -190,6 +184,11 @@ void imgui_thread()
             if (ImGui::Begin("Styles", &show_styles))
                 ImGui::ShowStyleEditor();
             ImGui::End();
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(image_mutex);
+            display_image_data = shared_image_data;
         }
 
         ImGui::Render();

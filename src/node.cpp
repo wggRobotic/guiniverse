@@ -12,7 +12,6 @@ using namespace std::chrono_literals;
 
 #define MAKE_CALLBACK(INDEX) [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr &msg) { SetImage(INDEX, msg->data, msg->width, msg->height, msg->step, msg->encoding); }
 
-
 std::mutex twist_mutex;
 geometry_msgs::msg::Twist shared_twist;
 
@@ -43,16 +42,9 @@ GuiniverseNode::GuiniverseNode()
 
     m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("enable_motor");
 }
+
 void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
 {
-    std::lock_guard<std::mutex> data_lock(image_mutex);
-
-    if (index >= shared_image_data.size())
-    {
-        std::cerr << "Index out of range: " << index << std::endl;
-        return;
-    }
-
     int cv_type;
     if (encoding == "mono8")
     {
@@ -73,9 +65,18 @@ void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, ui
     }
 
     cv::Mat image(height, width, cv_type, const_cast<uint8_t *>(data.data()), step);
-    shared_image_data[index] = image.clone();
-}
+    cv::Mat image_clone = image.clone();
 
+    {
+        std::lock_guard<std::mutex> data_lock(image_mutex);
+        if (index >= shared_image_data.size())
+        {
+            std::cerr << "Index out of range: " << index << std::endl;
+            return;
+        }
+        shared_image_data[index] = std::move(image_clone);
+    }
+}
 
 void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it)
 {
@@ -95,7 +96,6 @@ void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it
             shared_image_topics.at(i), 10, MAKE_CALLBACK(i));
     }
 }
-
 
 void GuiniverseNode::run()
 {
@@ -123,7 +123,6 @@ void GuiniverseNode::BarcodeCallback(const StringConstPtr &msg)
     shared_barcodes[msg->data]++;
 }
 
-
 void GuiniverseNode::TimerCallback()
 {
     {
@@ -136,7 +135,6 @@ void GuiniverseNode::TimerCallback()
         shared_gripper = m_GripperMessage;
     }
 }
-
 
 void GuiniverseNode::SetMotorStatus(bool status)
 {
