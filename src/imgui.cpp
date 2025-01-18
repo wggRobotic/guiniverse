@@ -8,7 +8,13 @@
 
 int selectedImageIndex = 0;
 GLuint currentTexture = 0;
-std::vector<cv::Mat> display_image_data;
+std::vector<cv::Mat> read_image_data;
+
+void swapBuffers()
+{
+    std::lock_guard<std::mutex> lock(image_mutex);
+    read_image_data = shared_image_data;
+}
 
 static void set_style()
 {
@@ -47,12 +53,10 @@ void updateTexture()
         currentTexture = 0;
     }
 
-    
-        if (selectedImageIndex < display_image_data.size())
-        {
-            currentTexture = convertToTexture(display_image_data[selectedImageIndex]);
-        }
-    
+    if (selectedImageIndex < read_image_data.size())
+    {
+        currentTexture = convertToTexture(read_image_data[selectedImageIndex]);
+    }
 }
 
 void imgui_thread()
@@ -121,7 +125,7 @@ void imgui_thread()
             if (ImGui::BeginCombo("Select Image", ("Image " + std::to_string(selectedImageIndex)).c_str()))
             {
 
-                for (size_t i = 0; i < display_image_data.size(); i++)
+                for (size_t i = 0; i < read_image_data.size(); i++)
                 {
                     const bool isSelected = (selectedImageIndex == i);
                     if (ImGui::Selectable(("Image " + std::to_string(i)).c_str(), isSelected))
@@ -139,9 +143,9 @@ void imgui_thread()
 
             if (currentTexture != 0)
             {
-                if (selectedImageIndex < display_image_data.size())
+                if (selectedImageIndex < read_image_data.size())
                 {
-                    auto &image = display_image_data[selectedImageIndex];
+                    auto &image = read_image_data[selectedImageIndex];
                     ImVec2 widget_size = ImGui::GetContentRegionAvail();
 
                     float image_aspect = static_cast<float>(image.cols) / image.rows;
@@ -186,10 +190,7 @@ void imgui_thread()
             ImGui::End();
         }
 
-        {
-            std::lock_guard<std::mutex> lock(image_mutex);
-            display_image_data = shared_image_data;
-        }
+        swapBuffers();
 
         ImGui::Render();
 
