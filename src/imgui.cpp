@@ -47,10 +47,10 @@ static void init_texture(GLuint &texture, GLsizei width, GLsizei height)
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void update_texture(GLuint texture, const cv::Mat &mat)
+static void update_texture(GLuint texture, const Image &image)
 {
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mat.cols, mat.rows, GL_BGR, GL_UNSIGNED_BYTE, mat.data);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.Width, image.Height, GL_BGR, GL_UNSIGNED_BYTE, image.Data.data());
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -60,14 +60,14 @@ static void refresh_image_data()
         return;
 
     auto &texture = gl_textures[selected_image_index];
-    auto &[mat, dirty] = image_data[selected_image_index];
+    auto &[image, dirty] = image_data[selected_image_index];
 
     bool no_texture = !texture;
     if (no_texture)
-        init_texture(texture, mat.cols, mat.rows);
+        init_texture(texture, image.Width, image.Height);
 
     if (dirty || no_texture)
-        update_texture(texture, mat);
+        update_texture(texture, image);
 
     dirty = false;
 }
@@ -158,10 +158,10 @@ void imgui_thread()
             if (selected_image_index < gl_textures.size() && selected_image_index < image_data.size())
             {
                 auto &texture = gl_textures[selected_image_index];
-                auto &[mat, dirty] = image_data[selected_image_index];
+                auto &[image, dirty] = image_data[selected_image_index];
                 auto widget_size = ImGui::GetContentRegionAvail();
 
-                auto image_aspect = static_cast<float>(mat.cols) / mat.rows;
+                auto image_aspect = static_cast<float>(image.Width) / static_cast<float>(image.Height);
                 auto widget_aspect = widget_size.x / widget_size.y;
 
                 ImVec2 display_size;

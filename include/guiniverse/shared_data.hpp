@@ -7,6 +7,7 @@
 #include <vector>
 #include <cv_bridge/cv_bridge.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <guiniverse/image.hpp>
 #include <image_transport/image_transport.hpp>
 #include <opencv2/opencv.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
@@ -14,7 +15,7 @@
 
 using namespace std::string_view_literals;
 
-using ImageData = std::pair<cv::Mat, bool>;
+using ImageData = std::pair<Image, bool>;
 
 // Shared data mutexes
 extern std::atomic<bool> running;

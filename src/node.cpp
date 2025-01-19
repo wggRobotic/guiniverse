@@ -27,38 +27,16 @@ GuiniverseNode::GuiniverseNode()
 
 void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
 {
-    int cv_type;
-    if (encoding == "mono8")
+    std::lock_guard<std::mutex> data_lock(image_mutex);
+    if (index >= shared_image_data.size())
     {
-        cv_type = CV_8UC1;
-    }
-    else if (encoding == "bgr8")
-    {
-        cv_type = CV_8UC3;
-    }
-    else if (encoding == "rgba8")
-    {
-        cv_type = CV_8UC4;
-    }
-    else
-    {
-        std::cerr << "Unsupported encoding: " << encoding << std::endl;
+        std::cerr << "Index out of range: " << index << std::endl;
         return;
     }
 
-    cv::Mat image(height, width, cv_type, const_cast<uint8_t *>(data.data()), step);
-
-    {
-        std::lock_guard<std::mutex> data_lock(image_mutex);
-        if (index >= shared_image_data.size())
-        {
-            std::cerr << "Index out of range: " << index << std::endl;
-            return;
-        }
-        auto &[mat, dirty] = shared_image_data[index];
-        mat = image;
-        dirty = true;
-    }
+    auto &[image, dirty] = shared_image_data[index];
+    image = {width, height, step, encoding, data};
+    dirty = true;
 }
 
 void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it)
