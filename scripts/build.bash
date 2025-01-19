@@ -1,5 +1,5 @@
 #!/bin/bash
 
 cd ../../
-colcon build --packages-select guiniverse && \
+colcon build --cmake-force-configure --packages-select guiniverse && \
 source install/local_setup.bash 
