@@ -2,38 +2,24 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <guiniverse/shared_data.hpp>
 #include <imgui.h>
 
-#include <guiniverse/shared_data.hpp>
+static int selected_image_index = 0;
+static std::vector<ImageData> image_data;
+static std::vector<GLuint> textures;
 
-int selectedImageIndex = 0;
-GLuint currentTexture = 0;
-std::vector<cv::Mat> read_image_data;
-
-void swapBuffers()
+static void swap_buffers()
 {
     std::lock_guard<std::mutex> lock(image_mutex);
-    read_image_data = shared_image_data;
+    image_data = shared_image_data;
+    textures.resize(image_data.size());
 }
 
 static void set_style()
 {
     ImVec4 *colors = ImGui::GetStyle().Colors;
-}
-
-GLuint convertToTexture(const cv::Mat &image)
-{
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.cols, image.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, image.data);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-    return textureID;
+    (void)colors;
 }
 
 static void on_key(GLFWwindow *window, int key, int scancode, int action, int mods)
@@ -45,18 +31,41 @@ static void on_key(GLFWwindow *window, int key, int scancode, int action, int mo
     }
 }
 
-void updateTexture()
+static void init_texture(GLuint &texture, GLsizei width, GLsizei height)
 {
-    if (currentTexture != 0)
-    {
-        glDeleteTextures(1, &currentTexture);
-        currentTexture = 0;
-    }
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    if (selectedImageIndex < read_image_data.size())
-    {
-        currentTexture = convertToTexture(read_image_data[selectedImageIndex]);
-    }
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGB8, width, height);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+static void update_texture(GLuint texture, const cv::Mat &mat)
+{
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, mat.cols, mat.rows, GL_BGR, GL_UNSIGNED_BYTE, mat.data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+static void refresh_image_data()
+{
+    auto &texture = textures[selected_image_index];
+    auto &[mat, dirty] = image_data[selected_image_index];
+
+    bool no_texture = !texture;
+    if (no_texture)
+        init_texture(texture, mat.cols, mat.rows);
+
+    if (dirty || no_texture)
+        update_texture(texture, mat);
+
+    dirty = false;
 }
 
 void imgui_thread()
@@ -67,7 +76,7 @@ void imgui_thread()
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 4);
-    GLFWwindow *window = glfwCreateWindow(800, 600, "GUINIVERSE", nullptr, nullptr);
+    auto window = glfwCreateWindow(800, 600, "GUINIVERSE", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -102,7 +111,7 @@ void imgui_thread()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        updateTexture();
+        refresh_image_data();
 
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
@@ -122,15 +131,15 @@ void imgui_thread()
 
         if (ImGui::Begin("Image Viewer"))
         {
-            if (ImGui::BeginCombo("Select Image", ("Image " + std::to_string(selectedImageIndex)).c_str()))
+            if (ImGui::BeginCombo("Select Image", ("Image " + std::to_string(selected_image_index)).c_str()))
             {
 
-                for (size_t i = 0; i < read_image_data.size(); i++)
+                for (size_t i = 0; i < image_data.size(); i++)
                 {
-                    const bool isSelected = (selectedImageIndex == i);
+                    const bool isSelected = (selected_image_index == i);
                     if (ImGui::Selectable(("Image " + std::to_string(i)).c_str(), isSelected))
                     {
-                        selectedImageIndex = i;
+                        selected_image_index = i;
                     }
                     if (isSelected)
                     {
@@ -141,29 +150,26 @@ void imgui_thread()
                 ImGui::EndCombo();
             }
 
-            if (currentTexture != 0)
+            if (selected_image_index < image_data.size())
             {
-                if (selectedImageIndex < read_image_data.size())
+                auto &texture = textures[selected_image_index];
+                auto &[mat, dirty] = image_data[selected_image_index];
+                auto widget_size = ImGui::GetContentRegionAvail();
+
+                auto image_aspect = static_cast<float>(mat.cols) / mat.rows;
+                auto widget_aspect = widget_size.x / widget_size.y;
+
+                ImVec2 display_size;
+                if (widget_aspect > image_aspect)
                 {
-                    auto &image = read_image_data[selectedImageIndex];
-                    ImVec2 widget_size = ImGui::GetContentRegionAvail();
-
-                    float image_aspect = static_cast<float>(image.cols) / image.rows;
-                    float widget_aspect = widget_size.x / widget_size.y;
-
-                    ImVec2 display_size;
-                    if (widget_aspect > image_aspect)
-                    {
-                        display_size = ImVec2(widget_size.y * image_aspect, widget_size.y);
-                    }
-                    else
-                    {
-                        display_size = ImVec2(widget_size.x, widget_size.x / image_aspect);
-                    }
-
-                    ImGui::Image(reinterpret_cast<ImTextureID>(static_cast<void *>(reinterpret_cast<void *>(currentTexture))),
-                                 display_size);
+                    display_size = ImVec2(widget_size.y * image_aspect, widget_size.y);
                 }
+                else
+                {
+                    display_size = ImVec2(widget_size.x, widget_size.x / image_aspect);
+                }
+
+                ImGui::Image(static_cast<ImTextureID>(texture), display_size);
             }
         }
         ImGui::End();
@@ -190,7 +196,7 @@ void imgui_thread()
             ImGui::End();
         }
 
-        swapBuffers();
+        swap_buffers();
 
         ImGui::Render();
 

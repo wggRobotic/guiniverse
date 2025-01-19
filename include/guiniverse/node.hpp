@@ -1,6 +1,5 @@
-// node.hpp
-
 #pragma once
+
 #include <geometry_msgs/msg/twist.hpp>
 #include <image_transport/image_transport.hpp>
 #include <image_transport/subscriber.hpp>
@@ -23,15 +22,15 @@ class GuiniverseNode : public rclcpp::Node
 public:
     GuiniverseNode();
 
-    void SetupWithImageTransport(image_transport::ImageTransport&);
+    void SetupWithImageTransport(image_transport::ImageTransport &);
 
     void run();
 
 private:
-    void BarcodeCallback(const StringConstPtr&);
+    void BarcodeCallback(const StringConstPtr &);
     void TimerCallback();
     void SetMotorStatus(bool status);
-    void SetImage(size_t index, const std::vector<uint8_t>&data, uint32_t width,uint32_t height, uint32_t step, const std::string &encoding);
+    void SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding);
 
     std::vector<image_transport::Subscriber> m_ImageSubscribers;
 

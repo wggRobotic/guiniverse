@@ -1,22 +1,24 @@
 #pragma once
 
 #include <atomic>
+#include <map>
 #include <mutex>
 #include <string>
-#include <map>
 #include <vector>
-#include <geometry_msgs/msg/twist.hpp>
-#include <std_msgs/msg/float32_multi_array.hpp>
-#include <image_transport/image_transport.hpp>
-#include <sensor_msgs/msg/compressed_image.hpp>
-#include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <image_transport/image_transport.hpp>
+#include <opencv2/opencv.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
+#include <std_msgs/msg/float32_multi_array.hpp>
+
+using ImageData = std::pair<cv::Mat, bool>;
 
 // Shared data mutexes
 extern std::atomic<bool> running;
 
 extern std::mutex image_mutex;
-extern std::vector<cv::Mat> shared_image_data;  // Shared image data buffer
+extern std::vector<ImageData> shared_image_data; // Shared image data buffer
 
 extern std::mutex image_topics_mutex;
 extern std::vector<std::string> shared_image_topics;

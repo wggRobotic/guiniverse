@@ -8,9 +8,9 @@
 #include <guiniverse/shared_data.hpp>
 #include <guiniverse/node.hpp>
 
-using namespace std::chrono_literals;
-
 #define MAKE_CALLBACK(INDEX) [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr &msg) { SetImage(INDEX, msg->data, msg->width, msg->height, msg->step, msg->encoding); }
+
+using namespace std::chrono_literals;
 
 std::mutex twist_mutex;
 geometry_msgs::msg::Twist shared_twist;
@@ -28,7 +28,7 @@ std::mutex image_topics_mutex;
 std::vector<std::string> shared_image_topics = {"n10/front/color", "n10/rear/color", "n10/gripper/color"};
 
 std::mutex image_mutex;
-std::vector<cv::Mat> shared_image_data;
+std::vector<ImageData> shared_image_data;
 
 GuiniverseNode::GuiniverseNode()
     : Node("guiniverse"), count_(0), running_(true)
@@ -65,7 +65,6 @@ void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, ui
     }
 
     cv::Mat image(height, width, cv_type, const_cast<uint8_t *>(data.data()), step);
-    cv::Mat image_clone = image.clone();
 
     {
         std::lock_guard<std::mutex> data_lock(image_mutex);
@@ -74,7 +73,9 @@ void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, ui
             std::cerr << "Index out of range: " << index << std::endl;
             return;
         }
-        shared_image_data[index] = std::move(image_clone);
+        auto &[mat, dirty] = shared_image_data[index];
+        mat = image;
+        dirty = true;
     }
 }
 

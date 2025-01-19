@@ -1,7 +1,6 @@
-// main.cpp
-
 #include <guiniverse/node.hpp>
 #include <image_transport/image_transport.hpp>
+
 using namespace std::chrono_literals;
 
 std::atomic<bool> running{true};
@@ -13,9 +12,8 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
 
-    rclcpp::on_shutdown([]() {
-        running = false;
-    });
+    rclcpp::on_shutdown([]()
+                        { running = false; });
 
     std::thread ros_thread(ros2_main_thread);
     std::thread gui_thread(imgui_thread);
@@ -23,7 +21,7 @@ int main(int argc, char **argv)
     ros_thread.join();
     gui_thread.join();
 
-    rclcpp::shutdown(); 
+    rclcpp::shutdown();
     return 0;
 }
 
