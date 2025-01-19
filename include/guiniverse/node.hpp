@@ -45,14 +45,13 @@ private:
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
 
-    std::vector<image_transport::Subscriber> image_subscribers;
     bool m_SetMotorStatusLock = false;
     bool m_ShouldSetMotorStatusTrue = false;
     bool m_ShouldSetMotorStatusFalse = false;
-    bool m_image_updated = false;
+    bool m_IsImageUpdated = false;
 
     rclcpp::TimerBase::SharedPtr m_Timer;
 
-    int count_ = 0;
-    bool running_ = true;
+    int m_Count = 0;
+    bool m_IsRunning = true;
 };

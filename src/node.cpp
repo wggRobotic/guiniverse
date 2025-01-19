@@ -12,26 +12,8 @@
 
 using namespace std::chrono_literals;
 
-std::mutex twist_mutex;
-geometry_msgs::msg::Twist shared_twist;
-
-std::mutex gripper_mutex;
-std_msgs::msg::Float32MultiArray shared_gripper;
-
-std::mutex barcode_mutex;
-std::map<std::string, size_t> shared_barcodes;
-
-std::mutex shared_data_mutex;
-std::string shared_data;
-
-std::mutex image_topics_mutex;
-std::vector<std::string> shared_image_topics = {"n10/front/color", "n10/rear/color", "n10/gripper/color"};
-
-std::mutex image_mutex;
-std::vector<ImageData> shared_image_data;
-
 GuiniverseNode::GuiniverseNode()
-    : Node("guiniverse"), count_(0), running_(true)
+    : Node("guiniverse"), m_Count(0), m_IsRunning(true)
 {
     m_Timer = this->create_wall_timer(500ms, std::bind(&GuiniverseNode::TimerCallback, this));
     m_TwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
@@ -81,27 +63,21 @@ void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, ui
 
 void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it)
 {
-    {
-        std::lock_guard<std::mutex> lock_image_topics(image_topics_mutex);
-        image_subscribers.resize(shared_image_topics.size());
-    }
+    m_ImageSubscribers.resize(IMAGE_TOPICS.size());
 
     {
         std::lock_guard<std::mutex> lock_image_data(image_mutex);
-        shared_image_data.resize(shared_image_topics.size());
+        shared_image_data.resize(IMAGE_TOPICS.size());
     }
 
-    for (size_t i = 0; i < shared_image_topics.size(); i++)
-    {
-        image_subscribers[i] = it.subscribe(
-            shared_image_topics.at(i), 10, MAKE_CALLBACK(i));
-    }
+    for (size_t i = 0; i < IMAGE_TOPICS.size(); i++)
+        m_ImageSubscribers[i] = it.subscribe(std::string(IMAGE_TOPICS.at(i)), 10, MAKE_CALLBACK(i));
 }
 
 void GuiniverseNode::run()
 {
     rclcpp::Rate rate(10);
-    while (rclcpp::ok() && running_)
+    while (rclcpp::ok() && m_IsRunning)
     {
         {
             std::lock_guard<std::mutex> lock(shared_data_mutex);
@@ -110,7 +86,7 @@ void GuiniverseNode::run()
 
         if (!running)
         {
-            running_ = running;
+            m_IsRunning = running;
         }
 
         rclcpp::spin_some(shared_from_this());

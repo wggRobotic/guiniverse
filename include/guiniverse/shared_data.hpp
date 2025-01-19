@@ -12,6 +12,8 @@
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
 
+using namespace std::string_view_literals;
+
 using ImageData = std::pair<cv::Mat, bool>;
 
 // Shared data mutexes
@@ -19,9 +21,6 @@ extern std::atomic<bool> running;
 
 extern std::mutex image_mutex;
 extern std::vector<ImageData> shared_image_data; // Shared image data buffer
-
-extern std::mutex image_topics_mutex;
-extern std::vector<std::string> shared_image_topics;
 
 extern std::mutex twist_mutex;
 extern geometry_msgs::msg::Twist shared_twist;
@@ -34,3 +33,9 @@ extern std::map<std::string, size_t> shared_barcodes;
 
 extern std::mutex shared_data_mutex;
 extern std::string shared_data;
+
+constexpr std::array<std::string_view, 3> IMAGE_TOPICS{
+    "n10/front/color"sv,
+    "n10/rear/color"sv,
+    "n10/gripper/color"sv,
+};

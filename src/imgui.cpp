@@ -2,23 +2,24 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <guiniverse/imgui.hpp>
 #include <guiniverse/shared_data.hpp>
 #include <imgui.h>
 
-static int selected_image_index = 0;
+static size_t selected_image_index = 0;
 static std::vector<ImageData> image_data;
-static std::vector<GLuint> textures;
+static std::vector<GLuint> gl_textures;
 
-static void swap_buffers()
+static void swap_image_data()
 {
     std::lock_guard<std::mutex> lock(image_mutex);
     image_data = shared_image_data;
-    textures.resize(image_data.size());
+    gl_textures.resize(image_data.size());
 }
 
 static void set_style()
 {
-    ImVec4 *colors = ImGui::GetStyle().Colors;
+    auto colors = ImGui::GetStyle().Colors;
     (void)colors;
 }
 
@@ -55,7 +56,10 @@ static void update_texture(GLuint texture, const cv::Mat &mat)
 
 static void refresh_image_data()
 {
-    auto &texture = textures[selected_image_index];
+    if (selected_image_index >= gl_textures.size() || selected_image_index >= image_data.size())
+        return;
+
+    auto &texture = gl_textures[selected_image_index];
     auto &[mat, dirty] = image_data[selected_image_index];
 
     bool no_texture = !texture;
@@ -111,9 +115,10 @@ void imgui_thread()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        swap_image_data();
         refresh_image_data();
 
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport()->ID, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
+        ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
         std::string display_data;
         {
@@ -150,9 +155,9 @@ void imgui_thread()
                 ImGui::EndCombo();
             }
 
-            if (selected_image_index < image_data.size())
+            if (selected_image_index < gl_textures.size() && selected_image_index < image_data.size())
             {
-                auto &texture = textures[selected_image_index];
+                auto &texture = gl_textures[selected_image_index];
                 auto &[mat, dirty] = image_data[selected_image_index];
                 auto widget_size = ImGui::GetContentRegionAvail();
 
@@ -196,8 +201,6 @@ void imgui_thread()
             ImGui::End();
         }
 
-        swap_buffers();
-
         ImGui::Render();
 
         glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
@@ -211,6 +214,7 @@ void imgui_thread()
         {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
+
             glfwMakeContextCurrent(window);
         }
     }
@@ -218,6 +222,7 @@ void imgui_thread()
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 
