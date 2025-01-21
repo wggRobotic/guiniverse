@@ -82,12 +82,12 @@ void GuiniverseNode::TimerCallback()
 {
     {
         std::lock_guard<std::mutex> lock(twist_mutex);
-        shared_twist = m_TwistMessage;
+        m_TwistMessage = shared_twist ;
     }
 
     {
         std::lock_guard<std::mutex> lock(gripper_mutex);
-        shared_gripper = m_GripperMessage;
+        m_GripperMessage = shared_gripper;
     }
 }
 

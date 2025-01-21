@@ -219,6 +219,9 @@ void imgui_thread()
         }
     }
 
+    for (auto &texture : gl_textures)
+        glDeleteTextures(1, &texture);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
