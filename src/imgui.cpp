@@ -10,6 +10,8 @@ static size_t selected_image_index = 0;
 static std::vector<ImageData> image_data;
 static std::vector<GLuint> gl_textures;
 
+bool joystick_connected = false;
+
 static void swap_image_data()
 {
     std::lock_guard<std::mutex> lock(image_mutex);
@@ -111,6 +113,21 @@ void imgui_thread()
     {
         glfwPollEvents();
 
+        int axes_count;
+        const float* axes;
+
+        int button_count;
+        const unsigned char* buttons;
+
+        {
+            joystick_connected = true;
+
+            axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axes_count);
+            buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &button_count);
+
+            if (buttons == NULL || axes == NULL) joystick_connected = false;
+        } 
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -181,6 +198,24 @@ void imgui_thread()
 
         if (ImGui::Begin("Control"))
         {
+
+        if (joystick_connected) 
+            ImGui::TextColored(ImVec4(0.f, 1.f, 0.f, 1.f), "Joystick connected");
+        else 
+            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Joystick not connected");
+
+        if (joystick_connected) {
+
+
+            ImGui::Text("");
+            for(int i = 0; i < axes_count; i++) 
+                ImGui::Text("Axes %d: %f", i, axes[i]);
+
+            ImGui::Text("");
+            for(int i = 0; i < button_count; i++) 
+                ImGui::Text("Button %d: %d", i, buttons[i] == GLFW_PRESS);
+        }
+
         }
         ImGui::End();
 
