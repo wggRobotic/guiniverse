@@ -66,8 +66,7 @@ void GuiniverseNode::run()
         {
             m_IsRunning = running;
         }
-
-        rclcpp::spin_some(shared_from_this());
+        rclcpp::spin(shared_from_this());
         rate.sleep();
     }
 }
