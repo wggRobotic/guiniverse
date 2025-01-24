@@ -81,7 +81,7 @@ void GuiniverseNode::TimerCallback()
 {
     {
         std::lock_guard<std::mutex> lock(twist_mutex);
-        m_TwistMessage = shared_twist ;
+        m_TwistMessage = shared_twist;
     }
 
     {

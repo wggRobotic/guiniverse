@@ -1,5 +1,6 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <fstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <guiniverse/imgui.hpp>
@@ -221,6 +222,26 @@ void imgui_thread()
 
         if (ImGui::Begin("Sensor Data"))
         {
+            std::lock_guard<std::mutex> lock(barcode_mutex);
+            ImGui::Text("Barcodes:");
+            for(const auto &[code,has_code]: shared_barcodes) ImGui::Text("%s: %lu",code.c_str(),has_code);
+            if(shared_barcodes.size()>0)
+            {
+                if(ImGui::Button("Export"))
+                {
+                    std::string barcodes;
+                    for(const auto &pair: shared_barcodes)
+                    {
+                        std::string keyStr = pair.first;
+                        std::string valueStr = std::to_string(pair.second);
+                        std:: string line = keyStr + ": " + valueStr;
+                        barcodes += line +"\n";
+                    }
+                    std::ofstream outputFile("Guiniverse_Barcode.txt");
+                    outputFile << barcodes;
+                    outputFile.close();
+                }
+            }
         }
         ImGui::End();
 
