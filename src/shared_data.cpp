@@ -16,3 +16,6 @@ std::map<std::string, size_t> shared_barcodes;
 
 std::mutex shared_data_mutex;
 std::string shared_data;
+
+std::mutex input_data_mutex;
+input_data shared_input_data;

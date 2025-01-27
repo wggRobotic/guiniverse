@@ -1,4 +1,5 @@
 #include <rclcpp/rclcpp.hpp>
+#include <cmath>
 #include <chrono>
 #include <mutex>
 #include <map>
@@ -23,6 +24,8 @@ GuiniverseNode::GuiniverseNode()
         "barcode", 10, std::bind(&GuiniverseNode::BarcodeCallback, this, std::placeholders::_1));
 
     m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("enable_motor");
+
+    m_TurtleTwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 }
 
 void GuiniverseNode::SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
@@ -88,6 +91,16 @@ void GuiniverseNode::TimerCallback()
         std::lock_guard<std::mutex> lock(gripper_mutex);
         m_GripperMessage = shared_gripper;
     }
+
+    auto twist_msg = geometry_msgs::msg::Twist();
+    {
+        std::lock_guard<std::mutex> lock(input_data_mutex);
+        
+        twist_msg.linear.x = shared_input_data.main_axes.y * (1.0 - fabsf(shared_input_data.main_axes.x) * fabsf(shared_input_data.main_axes.x));
+        twist_msg.angular.z = shared_input_data.main_axes.y * shared_input_data.main_axes.x;
+    }
+
+    m_TurtleTwistPublisher->publish(twist_msg);
 }
 
 void GuiniverseNode::SetMotorStatus(bool status)

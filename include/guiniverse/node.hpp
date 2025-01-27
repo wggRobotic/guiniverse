@@ -45,6 +45,8 @@ private:
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
 
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
+
     bool m_SetMotorStatusLock = false;
     bool m_ShouldSetMotorStatusTrue = false;
     bool m_ShouldSetMotorStatusFalse = false;

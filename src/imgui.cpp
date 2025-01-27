@@ -5,13 +5,12 @@
 #include <GLFW/glfw3.h>
 #include <guiniverse/imgui.hpp>
 #include <guiniverse/shared_data.hpp>
+#include <guiniverse/input.hpp>
 #include <imgui.h>
 
 static size_t selected_image_index = 0;
 static std::vector<ImageData> image_data;
 static std::vector<GLuint> gl_textures;
-
-bool joystick_connected = false;
 
 static void swap_image_data()
 {
@@ -90,6 +89,8 @@ void imgui_thread()
         return;
     }
 
+    input_state input(window);
+
     glfwSetKeyCallback(window, on_key);
 
     glfwMakeContextCurrent(window);
@@ -113,21 +114,6 @@ void imgui_thread()
     while (!glfwWindowShouldClose(window) && running)
     {
         glfwPollEvents();
-
-        int axes_count;
-        const float* axes;
-
-        int button_count;
-        const unsigned char* buttons;
-
-        {
-            joystick_connected = true;
-
-            axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axes_count);
-            buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &button_count);
-
-            if (buttons == NULL || axes == NULL) joystick_connected = false;
-        } 
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -197,28 +183,13 @@ void imgui_thread()
         }
         ImGui::End();
 
-        if (ImGui::Begin("Control"))
+        input.control_panal_imgui();
+
         {
+            std::lock_guard<std::mutex> lock(input_data_mutex);
 
-        if (joystick_connected) 
-            ImGui::TextColored(ImVec4(0.f, 1.f, 0.f, 1.f), "Joystick connected");
-        else 
-            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Joystick not connected");
-
-        if (joystick_connected) {
-
-
-            ImGui::Text("");
-            for(int i = 0; i < axes_count; i++) 
-                ImGui::Text("Axes %d: %f", i, axes[i]);
-
-            ImGui::Text("");
-            for(int i = 0; i < button_count; i++) 
-                ImGui::Text("Button %d: %d", i, buttons[i] == GLFW_PRESS);
+            shared_input_data.main_axes = input.get_main_axes();
         }
-
-        }
-        ImGui::End();
 
         if (ImGui::Begin("Sensor Data"))
         {

@@ -12,6 +12,7 @@
 #include <opencv2/opencv.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
+#include <imgui.h>
 
 using namespace std::string_view_literals;
 
@@ -40,3 +41,11 @@ constexpr std::array<std::string_view, 3> IMAGE_TOPICS{
     "n10/rear/color"sv,
     "n10/gripper/color"sv,
 };
+
+struct input_data
+{
+    ImVec2 main_axes = ImVec2(0.f, 0.f);
+};
+
+extern std::mutex input_data_mutex;
+extern input_data shared_input_data;
