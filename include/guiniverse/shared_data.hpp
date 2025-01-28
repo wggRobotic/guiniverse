@@ -36,8 +36,9 @@ extern std::map<std::string, size_t> shared_barcodes;
 extern std::mutex shared_data_mutex;
 extern std::string shared_data;
 
-constexpr std::array<std::string_view, 3> IMAGE_TOPICS{
+constexpr std::array<std::string_view, 4> IMAGE_TOPICS{
     "n10/front/color"sv,
+    "/n10/cam_dif"sv,
     "n10/rear/color"sv,
     "n10/gripper/color"sv,
 };
