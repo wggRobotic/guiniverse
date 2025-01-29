@@ -140,13 +140,13 @@ void imgui_thread()
 
         if (ImGui::Begin("Image Viewer"))
         {
-            if (ImGui::BeginCombo("Select Image", ("Image " + std::to_string(selected_image_index)).c_str()))
+            if (ImGui::BeginCombo("Select Image", (std::string(IMAGE_TOPICS.at(selected_image_index))).c_str()))
             {
 
                 for (size_t i = 0; i < image_data.size(); i++)
                 {
                     const bool isSelected = (selected_image_index == i);
-                    if (ImGui::Selectable(("Image " + std::to_string(i)).c_str(), isSelected))
+                    if (ImGui::Selectable((std::string(IMAGE_TOPICS.at(i))).c_str(), isSelected))
                     {
                         selected_image_index = i;
                     }
