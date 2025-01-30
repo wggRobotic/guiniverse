@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 GuiniverseNode::GuiniverseNode()
     : Node("guiniverse"), m_Count(0), m_IsRunning(true)
 {
-    m_Timer = this->create_wall_timer(500ms, std::bind(&GuiniverseNode::TimerCallback, this));
+    m_Timer = this->create_wall_timer(10ms, std::bind(&GuiniverseNode::TimerCallback, this));
     m_TwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     m_GripperPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>("gripper", 10);
 
@@ -96,8 +96,10 @@ void GuiniverseNode::TimerCallback()
     {
         std::lock_guard<std::mutex> lock(input_data_mutex);
         
-        twist_msg.linear.x = shared_input_data.main_axes.y * (1.0 - fabsf(shared_input_data.main_axes.x) * fabsf(shared_input_data.main_axes.x));
-        twist_msg.angular.z = shared_input_data.main_axes.y * shared_input_data.main_axes.x;
+        // twist_msg.linear.x = shared_input_data.main_axes.y * (1.0 - fabsf(shared_input_data.main_axes.x) * fabsf(shared_input_data.main_axes.x));
+        // twist_msg.angular.z = shared_input_data.main_axes.y * shared_input_data.main_axes.x;
+        twist_msg.linear.x = shared_input_data.main_axes.y;
+        twist_msg.angular.z = shared_input_data.main_axes.x * (shared_input_data.main_axes.y < 0 ? -1.f : 1.f);
     }
 
     m_TurtleTwistPublisher->publish(twist_msg);

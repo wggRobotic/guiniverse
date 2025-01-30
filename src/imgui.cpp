@@ -183,12 +183,17 @@ void imgui_thread()
         }
         ImGui::End();
 
-        input.control_panal_imgui();
-
+        input.update();
         {
             std::lock_guard<std::mutex> lock(input_data_mutex);
 
             shared_input_data.main_axes = input.get_main_axes();
+        }
+        if (ImGui::Begin("Control"))
+        {
+            input.imgui_panel();
+
+            ImGui::End();
         }
 
         if (ImGui::Begin("Sensor Data"))

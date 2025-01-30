@@ -1,30 +1,23 @@
 #include <cmath>
 #include <guiniverse/input.hpp>
+#include <stdio.h>
+#include <string.h>
+#include <iostream>
 
 ImVec2 imgui_joystick_rect(const char* label, float size, float deadzone, ImVec2* position) {
-    ImVec2 cursorPos = ImGui::GetCursorScreenPos();  // Panel position in the UI
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos(); 
 
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ImVec2 topLeft = cursorPos;
-    ImVec2 bottomRight = ImVec2(cursorPos.x + size, cursorPos.y + size);
-
-    // Draw joystick base (outer square)
-    draw_list->AddRectFilled(topLeft, bottomRight, IM_COL32(50, 50, 50, 255), 10.0f);
-    draw_list->AddRect(topLeft, bottomRight, IM_COL32(255, 255, 255, 100), 2.0f);
-
-    // Handle mouse interaction
     ImGui::InvisibleButton(label, ImVec2(size, size));
 
     ImVec2 joystick_position;
 
-    if (position != NULL) {
-        joystick_position = *position;
-    }
-    else if (ImGui::IsItemActive()) {
+    if (position != NULL) joystick_position = *position;
+    else if (ImGui::IsItemActive()) 
+    {
         ImVec2 mouse_pos = ImGui::GetMousePos();
 
-        joystick_position.x = 1.0f - 2.0f * ((mouse_pos.x - topLeft.x) / size);
-        joystick_position.y = 1.0f - 2.0f * ((mouse_pos.y - topLeft.y) / size);
+        joystick_position.x = 1.0f - 2.0f * ((mouse_pos.x - cursorPos.x) / size);
+        joystick_position.y = 1.0f - 2.0f * ((mouse_pos.y - cursorPos.y) / size);
 
     } 
     else joystick_position = ImVec2(0.f, 0.f);
@@ -36,10 +29,13 @@ ImVec2 imgui_joystick_rect(const char* label, float size, float deadzone, ImVec2
     if (fabsf(joystick_position.y) < deadzone) joystick_position.y = 0.0f;
 
     ImVec2 handle_pos = ImVec2(
-        topLeft.x + (1.0f - joystick_position.x) * 0.5f * size, 
-        topLeft.y + (1.0f - joystick_position.y) * 0.5f * size
+        cursorPos.x + (1.0f - joystick_position.x) * 0.5f * size, 
+        cursorPos.y + (1.0f - joystick_position.y) * 0.5f * size
     );
 
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddRectFilled(cursorPos, ImVec2(cursorPos.x + size, cursorPos.y + size), IM_COL32(50, 50, 50, 255), 10.0f);
+    draw_list->AddRect(cursorPos, ImVec2(cursorPos.x + size, cursorPos.y + size), IM_COL32(255, 255, 255, 100), 2.0f);
     draw_list->AddCircleFilled(handle_pos, size * 0.1f, IM_COL32(255, 0, 0, 255), 32);
 
     ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + size + ImGui::GetStyle().ItemSpacing.y));
@@ -47,76 +43,140 @@ ImVec2 imgui_joystick_rect(const char* label, float size, float deadzone, ImVec2
     return joystick_position;
 }
 
-void input_state::control_panal_imgui() {
+ImVec2 imgui_joystick_round(const char* label, float size, float dead_angle, ImVec2* position) {
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+    ImGui::InvisibleButton(label, ImVec2(size, size));
+
+    ImVec2 joystick_position;
+
+    if (position != NULL) joystick_position = *position;
+    else if (ImGui::IsItemActive()) 
+    {
+        ImVec2 mouse_pos = ImGui::GetMousePos();
+
+        joystick_position.x = 1.0f - 2.0f * ((mouse_pos.x - cursorPos.x) / size);
+        joystick_position.y = 1.0f - 2.0f * ((mouse_pos.y - cursorPos.y) / size);
+
+    } 
+    else joystick_position = ImVec2(0.f, 0.f);
+
+    float length = sqrtf(joystick_position.x * joystick_position.x + joystick_position.y * joystick_position.y);
+
+    if (length > 1.0f) {
+        joystick_position.x = (joystick_position.x / length);
+        joystick_position.y = (joystick_position.y / length);
+    }
+    
+    if (fabsf(joystick_position.x) < dead_angle) joystick_position.x = 0.0f;
+    if (fabsf(joystick_position.y) < dead_angle) joystick_position.y = 0.0f;
+
+    ImVec2 handle_pos = ImVec2(
+        cursorPos.x + (1.0f - joystick_position.x) * 0.5f * size, 
+        cursorPos.y + (1.0f - joystick_position.y) * 0.5f * size
+    );
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->AddCircleFilled(ImVec2(cursorPos.x + size * 0.5f, cursorPos.y + size * 0.5f), size * 0.5f, IM_COL32(255, 255, 255, 100));
+    draw_list->AddCircle(ImVec2(cursorPos.x + size * 0.5f, cursorPos.y + size * 0.5f), size * 0.5f, IM_COL32(255, 255, 255, 100));
+    draw_list->AddCircleFilled(handle_pos, size * 0.1f, IM_COL32(255, 0, 0, 255), 32);
+
+    ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + size + ImGui::GetStyle().ItemSpacing.y));
+
+    return joystick_position;
+}
+
+void input_state::update() {
 
     int axes_count;
     float* axes;
     int button_count;
     unsigned char* buttons;
 
+    if (refresh_button)
     {
-        joystick_connected = true;
+        refresh_button = false;
+        for (int i = 0; i <= GLFW_JOYSTICK_LAST; i++) 
+        {
+            input_devices_connected[i] = false;
+            if ((input_devices_connected[i] = glfwJoystickPresent(GLFW_JOYSTICK_1 + i)) != 0) 
+            {
+                const char* name = glfwGetJoystickName(GLFW_JOYSTICK_1 + i);
+                if (name) snprintf(input_device_names[i], sizeof(input_device_names[i]), "%s", name);
+                else snprintf(input_device_names[i], sizeof(input_device_names[i]), "Couldn't read device name");
+                
+                input_device_profiles[i] = -1;
 
-        axes = (float*) glfwGetJoystickAxes(GLFW_JOYSTICK_1, &axes_count);
-        buttons = (unsigned char*) glfwGetJoystickButtons(GLFW_JOYSTICK_1, &button_count);
+                for (int j = 0; j < INPUT_PROFILE_MAX_ENUM; j++)
+                {
+                    if (strcmp(known_input_device_names[j], input_device_names[i]) == 0)
+                    {
+                        input_device_profiles[i] = j;
+                        break;
+                    }
+                }
 
-        if (buttons == NULL || axes == NULL) joystick_connected = false;
-    } 
+            }
+            else if (i == input_device_selected_index) input_device_selected_index = -1;
+        }
+    }    
 
-    if (ImGui::Begin("Control"))
+    if (input_device_selected_index != -1) 
     {
+        axes = (float*) glfwGetJoystickAxes(input_device_selected_index, &axes_count);
+        buttons = (unsigned char*) glfwGetJoystickButtons(input_device_selected_index, &button_count);
 
-        if (joystick_connected) 
-            ImGui::TextColored(ImVec4(0.f, 1.f, 0.f, 1.f), "Joystick connected");
-        else 
-            ImGui::TextColored(ImVec4(1.f, 0.f, 0.f, 1.f), "Joystick not connected");
-
-        // input method selection
-        if (joystick_connected) 
-        {
-            if (ImGui::RadioButton("Joystick Logitech", input_mode == INPUT_JOYSTICK_LOGITECH)) 
-                input_mode = INPUT_JOYSTICK_LOGITECH;
-            if (ImGui::RadioButton("Joystick XBOX", input_mode == INPUT_JOYSTICK_XBOX)) 
-                input_mode = INPUT_JOYSTICK_XBOX;
+        if (buttons == NULL || axes == NULL) {
+            input_devices_connected[input_device_selected_index] = false;
+            input_device_selected_index = -1;
         }
-        else input_mode = INPUT_KEYBOARD;
-
-        if (ImGui::RadioButton("Keyboard", input_mode == INPUT_KEYBOARD)) 
-            input_mode = INPUT_KEYBOARD;
-
-        //input methods
-        switch (input_mode) 
-        {
-
-        case INPUT_KEYBOARD: 
-        {
-            main_axes = ImVec2(0.f, 0.f);
-
-            if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) main_axes = ImVec2(0.f, 1.f);
-            else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) main_axes = ImVec2(0.f, -1.f);
-            else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) main_axes = ImVec2(1.f, 1.f);
-            else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) main_axes = ImVec2(-1.f, 1.f);
-        
-        } break;
-
-        case INPUT_JOYSTICK_LOGITECH: 
-        {
-            if (fabsf(axes[0]) < 0.1) axes[0] = 0.f;
-            if (fabsf(axes[1]) < 0.1) axes[1] = 0.f;
-            main_axes = ImVec2(-axes[0] * buttons[0], -axes[1] * buttons[0]);
-        } break;
-
-        case INPUT_JOYSTICK_XBOX: 
-        {
-            main_axes = ImVec2(0.f, 0.f);
-        } break;
-
-        }
-
-        main_axes = imgui_joystick_rect("virtual joystick", 200.f, 0.1f, (main_axes.x == 0.f && main_axes.y == 0.f) ? NULL : &main_axes);
-        ImGui::Text("Position %f %f", main_axes.x, main_axes.y);
-
     }
-    ImGui::End();
+
+    main_axes = ImVec2(0.f, 0.f);
+
+
+    if(input_device_selected_index != -1) if (input_device_profiles[input_device_selected_index] != -1) {
+
+        switch (input_device_profiles[input_device_selected_index]) {
+
+            case INPUT_PROFILE_LOGITECH_JOYSTICK: {
+
+                if (fabsf(axes[0]) < 0.1) axes[0] = 0.f;
+                if (fabsf(axes[1]) < 0.1) axes[1] = 0.f;
+                main_axes = ImVec2(-axes[0] * buttons[0], -axes[1] * buttons[0]);
+            } break;
+
+        }
+    }
+
+}
+
+void input_state::imgui_panel() {
+
+    if (ImGui::BeginCombo("Select input device", input_device_selected_index == -1 ? "No device selected" : input_device_names[input_device_selected_index]))
+    {
+
+        if (ImGui::Selectable("No device selected", input_device_selected_index == -1))
+            input_device_selected_index = -1;
+
+        for (int i = 0; i <= GLFW_JOYSTICK_LAST; i++)
+        {
+            if (input_devices_connected[i] == true) 
+            {
+                if (ImGui::Selectable(input_device_names[i], input_device_selected_index == i)) 
+                    input_device_selected_index = i;
+            }
+        }
+        
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::Button("Refresh"))
+        refresh_button = true;
+
+    if (input_device_profiles[input_device_selected_index] == -1) ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "Couldn't find input profile for this device");
+
+    main_axes = imgui_joystick_round("virtual joystick", 200.f, 0.1f, (main_axes.x == 0.f && main_axes.y == 0.f) ? NULL : &main_axes);
+    ImGui::Text("Position %f %f", main_axes.x, main_axes.y);
 
 }
