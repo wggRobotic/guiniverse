@@ -6,6 +6,7 @@
 #include <guiniverse/imgui.hpp>
 #include <guiniverse/shared_data.hpp>
 #include <guiniverse/input.hpp>
+#include <guiniverse/rover_controller.hpp>
 #include <imgui.h>
 
 static size_t selected_image_index = 0;
@@ -90,6 +91,7 @@ void imgui_thread()
     }
 
     input_state input(window);
+    rover_controller controller;
 
     glfwSetKeyCallback(window, on_key);
 
@@ -184,16 +186,24 @@ void imgui_thread()
         ImGui::End();
 
         input.update();
-        {
-            std::lock_guard<std::mutex> lock(input_data_mutex);
 
-            shared_input_data.main_axes = input.get_main_axes();
-        }
         if (ImGui::Begin("Control"))
         {
             input.imgui_panel();
 
             ImGui::End();
+        }
+
+        controller.process(input);
+
+        {
+            std::lock_guard<std::mutex> lock(twist_mutex);
+
+            ImVec2 linear = controller.get_linear_velocity();
+            shared_twist.linear.x = linear.x;
+            shared_twist.linear.y = linear.y;
+            shared_twist.angular.z = controller.get_angular_velocity();
+            
         }
 
         if (ImGui::Begin("Sensor Data"))

@@ -92,17 +92,7 @@ void GuiniverseNode::TimerCallback()
         m_GripperMessage = shared_gripper;
     }
 
-    auto twist_msg = geometry_msgs::msg::Twist();
-    {
-        std::lock_guard<std::mutex> lock(input_data_mutex);
-        
-        // twist_msg.linear.x = shared_input_data.main_axes.y * (1.0 - fabsf(shared_input_data.main_axes.x) * fabsf(shared_input_data.main_axes.x));
-        // twist_msg.angular.z = shared_input_data.main_axes.y * shared_input_data.main_axes.x;
-        twist_msg.linear.x = shared_input_data.main_axes.y;
-        twist_msg.angular.z = shared_input_data.main_axes.x * (shared_input_data.main_axes.y < 0 ? -1.f : 1.f);
-    }
-
-    m_TurtleTwistPublisher->publish(twist_msg);
+    m_TurtleTwistPublisher->publish(shared_twist);
 }
 
 void GuiniverseNode::SetMotorStatus(bool status)

@@ -2,48 +2,8 @@
 #include <guiniverse/input.hpp>
 #include <stdio.h>
 #include <string.h>
-#include <iostream>
 
-ImVec2 imgui_joystick_rect(const char* label, float size, float deadzone, ImVec2* position) {
-    ImVec2 cursorPos = ImGui::GetCursorScreenPos(); 
-
-    ImGui::InvisibleButton(label, ImVec2(size, size));
-
-    ImVec2 joystick_position;
-
-    if (position != NULL) joystick_position = *position;
-    else if (ImGui::IsItemActive()) 
-    {
-        ImVec2 mouse_pos = ImGui::GetMousePos();
-
-        joystick_position.x = 1.0f - 2.0f * ((mouse_pos.x - cursorPos.x) / size);
-        joystick_position.y = 1.0f - 2.0f * ((mouse_pos.y - cursorPos.y) / size);
-
-    } 
-    else joystick_position = ImVec2(0.f, 0.f);
-
-    joystick_position.x = fmaxf(-1.0f, fminf(1.0f, joystick_position.x));
-    joystick_position.y = fmaxf(-1.0f, fminf(1.0f, joystick_position.y));
-
-    if (fabsf(joystick_position.x) < deadzone) joystick_position.x = 0.0f;
-    if (fabsf(joystick_position.y) < deadzone) joystick_position.y = 0.0f;
-
-    ImVec2 handle_pos = ImVec2(
-        cursorPos.x + (1.0f - joystick_position.x) * 0.5f * size, 
-        cursorPos.y + (1.0f - joystick_position.y) * 0.5f * size
-    );
-
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRectFilled(cursorPos, ImVec2(cursorPos.x + size, cursorPos.y + size), IM_COL32(50, 50, 50, 255), 10.0f);
-    draw_list->AddRect(cursorPos, ImVec2(cursorPos.x + size, cursorPos.y + size), IM_COL32(255, 255, 255, 100), 2.0f);
-    draw_list->AddCircleFilled(handle_pos, size * 0.1f, IM_COL32(255, 0, 0, 255), 32);
-
-    ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + size + ImGui::GetStyle().ItemSpacing.y));
-
-    return joystick_position;
-}
-
-ImVec2 imgui_joystick_round(const char* label, float size, float dead_angle, ImVec2* position) {
+ImVec2 imgui_joystick(const char* label, float size, ImVec2 dead_ranges, ImVec2* position) {
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
 
     ImGui::InvisibleButton(label, ImVec2(size, size));
@@ -68,8 +28,8 @@ ImVec2 imgui_joystick_round(const char* label, float size, float dead_angle, ImV
         joystick_position.y = (joystick_position.y / length);
     }
     
-    if (fabsf(joystick_position.x) < dead_angle) joystick_position.x = 0.0f;
-    if (fabsf(joystick_position.y) < dead_angle) joystick_position.y = 0.0f;
+    if (fabsf(joystick_position.x) < dead_ranges.x) joystick_position.x = 0.0f;
+    if (fabsf(joystick_position.y) < dead_ranges.y) joystick_position.y = 0.0f;
 
     ImVec2 handle_pos = ImVec2(
         cursorPos.x + (1.0f - joystick_position.x) * 0.5f * size, 
@@ -176,7 +136,18 @@ void input_state::imgui_panel() {
 
     if (input_device_profiles[input_device_selected_index] == -1) ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "Couldn't find input profile for this device");
 
-    main_axes = imgui_joystick_round("virtual joystick", 200.f, 0.1f, (main_axes.x == 0.f && main_axes.y == 0.f) ? NULL : &main_axes);
-    ImGui::Text("Position %f %f", main_axes.x, main_axes.y);
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+
+    main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.1f, 0.1f), (main_axes.x == 0.f && main_axes.y == 0.f) ? NULL : &main_axes);
+
+    ImGui::Text("Joystick %f %f", main_axes.x, main_axes.y);
+
+    ImGui::Button("Enable");
+
+    ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+
+    ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &scalar, 0.0f, 1.0f, "%.2f");
+
+    scaled_main_axes = ImVec2(main_axes.x * scalar, main_axes.y * scalar);
 
 }

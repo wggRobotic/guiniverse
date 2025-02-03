@@ -23,7 +23,8 @@ public:
     void update();
     void imgui_panel();
 
-    ImVec2 get_main_axes() {return main_axes;};
+    ImVec2 get_main_axes() {return scaled_main_axes;};
+
 private:
     
     input_state() = delete;
@@ -38,4 +39,7 @@ private:
     bool refresh_button = true;
 
     ImVec2 main_axes = ImVec2(0.f, 0.f);
+    float scalar = 1.f;
+
+    ImVec2 scaled_main_axes = ImVec2(0.f, 0.f);
 };

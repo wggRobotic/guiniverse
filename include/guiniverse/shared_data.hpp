@@ -42,11 +42,3 @@ constexpr std::array<std::string_view, 4> IMAGE_TOPICS{
     "n10/rear/color"sv,
     "n10/gripper/color"sv,
 };
-
-struct input_data
-{
-    ImVec2 main_axes = ImVec2(0.f, 0.f);
-};
-
-extern std::mutex input_data_mutex;
-extern input_data shared_input_data;
