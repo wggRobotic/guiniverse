@@ -104,6 +104,13 @@ void input_state::update() {
                 if (fabsf(axes[0]) < 0.1) axes[0] = 0.f;
                 if (fabsf(axes[1]) < 0.1) axes[1] = 0.f;
                 main_axes = ImVec2(-axes[0] * buttons[0], -axes[1] * buttons[0]);
+
+                if ((axes[2] + 1.f) / 2.f != scalar_axis_device)
+                {
+                    scalar_axis_device = (axes[2] + 1.f) / 2.f;
+                    scalar_axis = scalar_axis_device;
+                }
+
             } break;
 
         }
@@ -115,17 +122,13 @@ void input_state::imgui_panel() {
 
     if (ImGui::BeginCombo("Select input device", input_device_selected_index == -1 ? "No device selected" : input_device_names[input_device_selected_index]))
     {
-
         if (ImGui::Selectable("No device selected", input_device_selected_index == -1))
             input_device_selected_index = -1;
 
-        for (int i = 0; i <= GLFW_JOYSTICK_LAST; i++)
+        for (int i = 0; i <= GLFW_JOYSTICK_LAST; i++) if (input_devices_connected[i] == true) 
         {
-            if (input_devices_connected[i] == true) 
-            {
-                if (ImGui::Selectable(input_device_names[i], input_device_selected_index == i)) 
-                    input_device_selected_index = i;
-            }
+            if (ImGui::Selectable(input_device_names[i], input_device_selected_index == i)) 
+                input_device_selected_index = i;
         }
         
         ImGui::EndCombo();
@@ -142,12 +145,15 @@ void input_state::imgui_panel() {
 
     ImGui::Text("Joystick %f %f", main_axes.x, main_axes.y);
 
-    ImGui::Button("Enable");
+    if (ImGui::Button("Enable")) enable_button = true;
+    else enable_button = false;
+    if (ImGui::Button("Disable")) disable_button = true;
+    else disable_button = false;
 
     ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
 
-    ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &scalar, 0.0f, 1.0f, "%.2f");
+    ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &scalar_axis, 0.0f, 1.0f, "%.2f");
 
-    scaled_main_axes = ImVec2(main_axes.x * scalar, main_axes.y * scalar);
+    scaled_main_axes = ImVec2(main_axes.x * scalar_axis, main_axes.y * scalar_axis);
 
 }

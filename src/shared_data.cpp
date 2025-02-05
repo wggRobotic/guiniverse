@@ -16,3 +16,6 @@ std::map<std::string, size_t> shared_barcodes;
 
 std::mutex shared_data_mutex;
 std::string shared_data;
+
+std::mutex motor_service_mutex;
+int shared_motor_service_request = MOTOR_SERVICE_NONE;

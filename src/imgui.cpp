@@ -195,16 +195,7 @@ void imgui_thread()
         }
 
         controller.process(input);
-
-        {
-            std::lock_guard<std::mutex> lock(twist_mutex);
-
-            ImVec2 linear = controller.get_linear_velocity();
-            shared_twist.linear.x = linear.x;
-            shared_twist.linear.y = linear.y;
-            shared_twist.angular.z = controller.get_angular_velocity();
-            
-        }
+        controller.transfer_data_ros();
 
         if (ImGui::Begin("Sensor Data"))
         {

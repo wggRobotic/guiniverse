@@ -23,7 +23,7 @@ GuiniverseNode::GuiniverseNode()
     m_BarcodeSubscriber = this->create_subscription<std_msgs::msg::String>(
         "barcode", 10, std::bind(&GuiniverseNode::BarcodeCallback, this, std::placeholders::_1));
 
-    m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("enable_motor");
+    m_EnableMotorClient = this->create_client<std_srvs::srv::SetBool>("/eduard/enable");
 
     m_TurtleTwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 }
@@ -70,6 +70,12 @@ void GuiniverseNode::run()
             m_IsRunning = running;
         }
         rclcpp::spin(shared_from_this());
+
+        if (m_EnableMotorClientWaiting && m_EnableMotorClientTimeSent + 5 > this->now().seconds()) {
+            RCLCPP_INFO(this->get_logger(), "Service Didnt respond in time");
+            m_EnableMotorClientWaiting = false; 
+        }
+
         rate.sleep();
     }
 }
@@ -86,13 +92,59 @@ void GuiniverseNode::TimerCallback()
         std::lock_guard<std::mutex> lock(twist_mutex);
         m_TwistMessage = shared_twist;
     }
+    m_TurtleTwistPublisher->publish(m_TwistMessage);
 
     {
         std::lock_guard<std::mutex> lock(gripper_mutex);
         m_GripperMessage = shared_gripper;
     }
 
-    m_TurtleTwistPublisher->publish(shared_twist);
+    if (!m_EnableMotorClientWaiting)
+    {
+        {
+            std::lock_guard<std::mutex> lock(motor_service_mutex);
+            m_EnableMotorClientStatusToSet = shared_motor_service_request;
+        }
+        
+        if (m_EnableMotorClientStatusToSet != MOTOR_SERVICE_NONE)
+        {
+            if (!m_EnableMotorClient->service_is_ready()) 
+            {
+                RCLCPP_WARN(this->get_logger(), "Enable service is not available.");
+                m_EnableMotorClientStatusToSet = MOTOR_SERVICE_NONE;
+            }
+            else {
+                
+                auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+                if (m_EnableMotorClientStatusToSet == MOTOR_SERVICE_ENABLE)
+                {
+                    RCLCPP_INFO(this->get_logger(), "Enabeling ...");
+                    request->data = true;
+                }
+                else if (m_EnableMotorClientStatusToSet == MOTOR_SERVICE_DISABLE)
+                {
+                    RCLCPP_INFO(this->get_logger(), "Disabling ...");
+                    request->data = false;
+                }
+
+                m_EnableMotorClient->async_send_request(request, std::bind(&GuiniverseNode::EnableMotorClientCallback, this, std::placeholders::_1));
+
+                m_EnableMotorClientWaiting = true;
+                m_EnableMotorClientTimeSent = this->now().seconds();
+            }
+        }
+
+    }
+
+}
+
+void GuiniverseNode::EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response) 
+{
+    RCLCPP_INFO(this->get_logger(), "Response: success=%s, message='%s'",
+                response.get()->success ? "true" : "false",
+                response.get()->message.c_str());
+
+    m_EnableMotorClientWaiting = false;
 }
 
 void GuiniverseNode::SetMotorStatus(bool status)

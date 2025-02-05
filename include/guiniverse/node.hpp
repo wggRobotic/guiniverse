@@ -29,6 +29,7 @@ public:
 private:
     void BarcodeCallback(const StringConstPtr &);
     void TimerCallback();
+    void EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response);
     void SetMotorStatus(bool status);
     void SetImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding);
 
@@ -43,13 +44,13 @@ private:
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperPublisher;
     std_msgs::msg::Float32MultiArray m_GripperMessage;
 
-    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
-
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
 
-    bool m_SetMotorStatusLock = false;
-    bool m_ShouldSetMotorStatusTrue = false;
-    bool m_ShouldSetMotorStatusFalse = false;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
+    int m_EnableMotorClientStatusToSet = 0;
+    bool m_EnableMotorClientWaiting = false;
+    int m_EnableMotorClientTimeSent = 0;
+
     bool m_IsImageUpdated = false;
 
     rclcpp::TimerBase::SharedPtr m_Timer;

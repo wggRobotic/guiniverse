@@ -25,6 +25,9 @@ public:
 
     ImVec2 get_main_axes() {return scaled_main_axes;};
 
+    bool get_enable_button() {return enable_button;};
+    bool get_disable_button() {return disable_button;};
+
 private:
     
     input_state() = delete;
@@ -39,7 +42,11 @@ private:
     bool refresh_button = true;
 
     ImVec2 main_axes = ImVec2(0.f, 0.f);
-    float scalar = 1.f;
+    float scalar_axis = 1.f;
+    float scalar_axis_device = 1.f;
 
     ImVec2 scaled_main_axes = ImVec2(0.f, 0.f);
+
+    bool enable_button = false;
+    bool disable_button = false;
 };

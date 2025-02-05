@@ -21,6 +21,7 @@ public:
     void add_wheel(ImVec2 position);
 
     void process(input_state& input);
+    void transfer_data_ros();
 
     ImVec2 get_linear_velocity() {return linear_velocity;};
     float get_angular_velocity() {return angular_velocity;};
@@ -31,4 +32,6 @@ private:
 
     ImVec2 linear_velocity = ImVec2(0, 0);
     float angular_velocity = 0;
+
+    int motor_status = 0;
 };
