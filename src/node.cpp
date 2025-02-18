@@ -16,7 +16,7 @@ using namespace std::chrono_literals;
 GuiniverseNode::GuiniverseNode()
     : Node("guiniverse"), m_Count(0), m_IsRunning(true)
 {
-    m_Timer = this->create_wall_timer(10ms, std::bind(&GuiniverseNode::TimerCallback, this));
+    m_Timer = this->create_wall_timer(100ms, std::bind(&GuiniverseNode::TimerCallback, this));
     m_TwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     m_GripperPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>("gripper", 10);
 
@@ -57,7 +57,7 @@ void GuiniverseNode::SetupWithImageTransport(image_transport::ImageTransport &it
 
 void GuiniverseNode::run()
 {
-    rclcpp::Rate rate(10);
+    rclcpp::Rate rate(30);
     while (rclcpp::ok() && m_IsRunning)
     {
         {
@@ -71,8 +71,42 @@ void GuiniverseNode::run()
         }
         rclcpp::spin(shared_from_this());
 
-        if (m_EnableMotorClientWaiting && m_EnableMotorClientTimeSent + 5 > this->now().seconds()) {
-            RCLCPP_INFO(this->get_logger(), "Service Didnt respond in time");
+        if (!m_EnableMotorClientWaiting)
+        {
+            bool is_set;
+            bool status;
+
+            {
+                std::lock_guard<std::mutex> lock(motor_enable_service_mutex);
+                is_set = motor_enable_service_is_set_status;
+                status = motor_enable_service_set_status;
+            }
+
+            if (is_set)
+            {
+                if (!m_EnableMotorClient->service_is_ready()) 
+                    RCLCPP_WARN(this->get_logger(), "Enable service is not available.");
+
+                else {
+                
+                    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+                    request->data = status;
+
+                    if (status)
+                        RCLCPP_INFO(this->get_logger(), "Enabeling ...");
+                    else
+                        RCLCPP_INFO(this->get_logger(), "Disabling ...");
+
+                    m_EnableMotorClient->async_send_request(request, std::bind(&GuiniverseNode::EnableMotorClientCallback, this, std::placeholders::_1));
+
+                    m_EnableMotorClientWaiting = true;
+                    m_EnableMotorClientTimeSent = this->now().seconds();
+                }
+            }
+
+        }
+        else if (m_EnableMotorClientWaiting && m_EnableMotorClientTimeSent + 5 > this->now().seconds()) {
+            RCLCPP_INFO(this->get_logger(), "Service didn't respond in time");
             m_EnableMotorClientWaiting = false; 
         }
 
@@ -97,43 +131,6 @@ void GuiniverseNode::TimerCallback()
     {
         std::lock_guard<std::mutex> lock(gripper_mutex);
         m_GripperMessage = shared_gripper;
-    }
-
-    if (!m_EnableMotorClientWaiting)
-    {
-        {
-            std::lock_guard<std::mutex> lock(motor_service_mutex);
-            m_EnableMotorClientStatusToSet = shared_motor_service_request;
-        }
-        
-        if (m_EnableMotorClientStatusToSet != MOTOR_SERVICE_NONE)
-        {
-            if (!m_EnableMotorClient->service_is_ready()) 
-            {
-                RCLCPP_WARN(this->get_logger(), "Enable service is not available.");
-                m_EnableMotorClientStatusToSet = MOTOR_SERVICE_NONE;
-            }
-            else {
-                
-                auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
-                if (m_EnableMotorClientStatusToSet == MOTOR_SERVICE_ENABLE)
-                {
-                    RCLCPP_INFO(this->get_logger(), "Enabeling ...");
-                    request->data = true;
-                }
-                else if (m_EnableMotorClientStatusToSet == MOTOR_SERVICE_DISABLE)
-                {
-                    RCLCPP_INFO(this->get_logger(), "Disabling ...");
-                    request->data = false;
-                }
-
-                m_EnableMotorClient->async_send_request(request, std::bind(&GuiniverseNode::EnableMotorClientCallback, this, std::placeholders::_1));
-
-                m_EnableMotorClientWaiting = true;
-                m_EnableMotorClientTimeSent = this->now().seconds();
-            }
-        }
-
     }
 
 }

@@ -3,7 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 
-enum input_profile 
+enum InputProfile 
 {
     INPUT_PROFILE_LOGITECH_JOYSTICK,
     INPUT_PROFILE_XBOX_CONTROLLER,
@@ -49,4 +49,5 @@ private:
 
     bool enable_button = false;
     bool disable_button = false;
+    bool gas_button = false;
 };

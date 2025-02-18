@@ -22,7 +22,8 @@ void rover_controller::process(input_state& input) {
     linear_velocity.x = main_axes.y;
     angular_velocity = main_axes.x * (main_axes.y < 0 ? -1.f : 1.f);
 
-    motor_status = (input.get_enable_button() ? MOTOR_SERVICE_ENABLE : (input.get_disable_button() ? MOTOR_SERVICE_DISABLE : MOTOR_SERVICE_NONE));
+    should_set_motor_status = ( input.get_enable_button() | input.get_disable_button() );
+    motor_status = (input.get_enable_button() ? true : false);
 }
 
 void rover_controller::transfer_data_ros() {
@@ -36,9 +37,10 @@ void rover_controller::transfer_data_ros() {
     }
 
     {
-        std::lock_guard<std::mutex> lock(motor_service_mutex);
+        std::lock_guard<std::mutex> lock(motor_enable_service_mutex);
 
-        shared_motor_service_request = motor_status; 
+        motor_enable_service_set_status = motor_status;
+        motor_enable_service_is_set_status = should_set_motor_status;
     }
 
 }

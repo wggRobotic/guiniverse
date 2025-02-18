@@ -33,5 +33,6 @@ private:
     ImVec2 linear_velocity = ImVec2(0, 0);
     float angular_velocity = 0;
 
-    int motor_status = 0;
+    bool should_set_motor_status = false;
+    bool motor_status = false;
 };

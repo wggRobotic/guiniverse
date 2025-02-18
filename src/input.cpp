@@ -150,6 +150,9 @@ void input_state::imgui_panel() {
     if (ImGui::Button("Disable")) disable_button = true;
     else disable_button = false;
 
+    if(enable_button) printf("enablee");
+    if(disable_button) printf("disablee");
+
     ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
 
     ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &scalar_axis, 0.0f, 1.0f, "%.2f");

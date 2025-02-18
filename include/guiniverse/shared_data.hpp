@@ -43,12 +43,6 @@ constexpr std::array<std::string_view, 4> IMAGE_TOPICS{
     "n10/gripper/color"sv,
 };
 
-enum motor_service_status
-{
-    MOTOR_SERVICE_NONE,
-    MOTOR_SERVICE_ENABLE,
-    MOTOR_SERVICE_DISABLE,
-};
-
-extern std::mutex motor_service_mutex;
-extern int shared_motor_service_request;
+extern std::mutex motor_enable_service_mutex;
+extern bool motor_enable_service_set_status;
+extern bool motor_enable_service_is_set_status;

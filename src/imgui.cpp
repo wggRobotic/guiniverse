@@ -7,11 +7,27 @@
 #include <guiniverse/shared_data.hpp>
 #include <guiniverse/input.hpp>
 #include <guiniverse/rover_controller.hpp>
+#include <guiniverse/terminal.hpp>
 #include <imgui.h>
 
 static size_t selected_image_index = 0;
 static std::vector<ImageData> image_data;
 static std::vector<GLuint> gl_textures;
+
+enum GuiMode
+{
+    GUI_MODE_NONE = -1,
+    GUI_MODE_ROVER,
+    GUI_MODE_DOG,
+    GUI_MODE_MAX_ENUM,
+};
+
+char* gui_mode_strings[] = {
+    "N10Rover",
+    "Idefix"
+};
+
+int gui_mode = GUI_MODE_ROVER;
 
 static void swap_image_data()
 {
@@ -93,6 +109,9 @@ void imgui_thread()
     input_state input(window);
     rover_controller controller;
 
+    ImGuiTerminal terminal;
+    terminal.Init();
+
     glfwSetKeyCallback(window, on_key);
 
     glfwMakeContextCurrent(window);
@@ -137,6 +156,21 @@ void imgui_thread()
             ImGui::Text("Shared Data: %s", display_data.c_str());
             ImGui::ColorEdit4("Clear Color", clear_color);
             ImGui::Checkbox("Show Styles", &show_styles);
+            
+            if (ImGui::BeginCombo("Select which robot to control", gui_mode == GUI_MODE_NONE ? "No robot selected" : gui_mode_strings[gui_mode]))
+            {
+                if (ImGui::Selectable("No robot selected", gui_mode == GUI_MODE_NONE))
+                    gui_mode = GUI_MODE_NONE;
+
+                for (int i = 0; i < GUI_MODE_MAX_ENUM; i++)
+                {
+                    if (ImGui::Selectable(gui_mode_strings[i], gui_mode == i)) 
+                        gui_mode = i;
+                }
+                
+                ImGui::EndCombo();
+            }
+
         }
         ImGui::End();
 
@@ -233,6 +267,8 @@ void imgui_thread()
                 ImGui::ShowStyleEditor();
             ImGui::End();
         }
+
+        terminal.Draw();
 
         ImGui::Render();
 

@@ -47,7 +47,6 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
-    int m_EnableMotorClientStatusToSet = 0;
     bool m_EnableMotorClientWaiting = false;
     int m_EnableMotorClientTimeSent = 0;
 
