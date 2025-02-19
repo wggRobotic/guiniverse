@@ -1,26 +1,10 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
-#include <imgui.h>
-
-enum InputButton
-{
-    INPUT_BUTTON_GAS,
-    INPUT_BUTTON_ENABLE,
-    INPUT_BUTTON_DISABLE,
-    INPUT_BUTTON_MAX_ENUM
-};
-
-enum InputAxis
-{
-    INPUT_AXIS_MAIN_X,
-    INPUT_AXIS_MAIN_Y,
-    INPUT_AXIS_SCALAR,
-    INPUT_AXIS_MAX_ENUM,
-};
 
 enum InputProfile 
 {
+    INPUT_PROFILE_UNKNOWN = -1,
     INPUT_PROFILE_LOGITECH_JOYSTICK,
     INPUT_PROFILE_XBOX_CONTROLLER,
     INPUT_PROFILE_MAX_ENUM
@@ -31,41 +15,36 @@ static const char* known_input_device_names[] = {
     "XBOX Controller"
 };
 
-static const int input_button_mappings[INPUT_PROFILE_MAX_ENUM][INPUT_BUTTON_MAX_ENUM] = {
-    {0},
-};
-
-static const int input_axes_mappings[INPUT_PROFILE_MAX_ENUM][INPUT_AXIS_MAX_ENUM] = {
-    {0, 1, 3},
-};
-
 struct input_state 
 {
 public:
-    input_state(GLFWwindow* w) : window(w) {};
 
     void update();
-    void imgui_panel();
+    void ImGui_panel(char* label);
 
-    bool get_button(int i) 
+    bool get_button(unsigned int i) 
     {
-        if(i < INPUT_BUTTON_MAX_ENUM) 
-            return buttons[i];
+        if (i < 32 && input_device_selected_index != -1)
+            if (input_device_profiles[input_device_selected_index] != INPUT_PROFILE_UNKNOWN) 
+                return buttons[i];
         return false;
     };
 
-    float get_axis(int i) 
+    float get_axis(unsigned int i) 
     {
-        if(i < INPUT_AXIS_MAX_ENUM) 
-            return axes[i];
+        if (i < 16 && input_device_selected_index != -1)
+            if (input_device_profiles[input_device_selected_index] != INPUT_PROFILE_UNKNOWN) 
+                return axes[i] * (invert_axes[input_device_selected_index][i] ? -1.f : 1.f);
         return 0.f;
     };
 
+    int get_device_profile() { 
+        if (input_device_selected_index != -1) 
+            return input_device_profiles[input_device_selected_index];
+        return INPUT_PROFILE_UNKNOWN;
+    };
+
 private:
-    
-    input_state() = delete;
-    
-    GLFWwindow* window;
     
     bool input_devices_connected[GLFW_JOYSTICK_LAST + 1];
     char input_device_names[GLFW_JOYSTICK_LAST + 1][128];
@@ -74,6 +53,7 @@ private:
 
     bool refresh_button = true;
 
-    bool buttons[INPUT_BUTTON_MAX_ENUM] = {false};
-    float axes[INPUT_AXIS_MAX_ENUM] = {0};
+    bool buttons[32] = {false};
+    float axes[16] = {0};
+    bool invert_axes[GLFW_JOYSTICK_LAST + 1][16] = {false};
 };

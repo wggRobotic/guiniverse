@@ -106,8 +106,8 @@ void imgui_thread()
         return;
     }
 
-    input_state input(window);
-    rover_controller controller;
+    input_state input;
+    rover_controller rv_controller;
 
     ImGuiTerminal terminal;
     terminal.Init();
@@ -220,16 +220,14 @@ void imgui_thread()
         ImGui::End();
 
         input.update();
+        input.ImGui_panel("Input");
 
-        if (ImGui::Begin("Control"))
-        {
-            input.imgui_panel();
-
-            ImGui::End();
-        }
-
-        controller.process(input);
-        controller.transfer_data_ros();
+        rv_controller.get_input(input);
+        rv_controller.ImGui_panel_control("Control");
+        rv_controller.process();
+        rv_controller.exchange_ros_data();
+        rv_controller.ImGui_panel_visualisation("Visualization");
+        
 
         if (ImGui::Begin("Sensor Data"))
         {
@@ -253,11 +251,6 @@ void imgui_thread()
                     outputFile.close();
                 }
             }
-        }
-        ImGui::End();
-
-        if (ImGui::Begin("Visualization"))
-        {
         }
         ImGui::End();
 
