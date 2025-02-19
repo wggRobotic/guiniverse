@@ -48,10 +48,10 @@ ImVec2 imgui_joystick(const char* label, float size, ImVec2 dead_ranges, ImVec2*
 
 void input_state::update() {
 
-    int axes_count;
-    float* axes;
-    int button_count;
-    unsigned char* buttons;
+    int joystick_axes_count;
+    float* joystick_axes;
+    int joystick_button_count;
+    unsigned char* joystick_buttons;
 
     if (refresh_button)
     {
@@ -83,37 +83,25 @@ void input_state::update() {
 
     if (input_device_selected_index != -1) 
     {
-        axes = (float*) glfwGetJoystickAxes(input_device_selected_index, &axes_count);
-        buttons = (unsigned char*) glfwGetJoystickButtons(input_device_selected_index, &button_count);
+        joystick_axes = (float*) glfwGetJoystickAxes(input_device_selected_index, &joystick_axes_count);
+        joystick_buttons = (unsigned char*) glfwGetJoystickButtons(input_device_selected_index, &joystick_button_count);
 
-        if (buttons == NULL || axes == NULL) {
+        if (joystick_buttons == NULL || joystick_axes == NULL) {
             input_devices_connected[input_device_selected_index] = false;
             input_device_selected_index = -1;
         }
     }
 
-    main_axes = ImVec2(0.f, 0.f);
-
+    for (int i = 0; i < INPUT_BUTTON_MAX_ENUM; i++) buttons[i] = false;
+    axes[INPUT_AXIS_MAIN_X] = 0.f;
+    axes[INPUT_AXIS_MAIN_Y] = 0.f;
 
     if(input_device_selected_index != -1) if (input_device_profiles[input_device_selected_index] != -1) {
 
-        switch (input_device_profiles[input_device_selected_index]) {
-
-            case INPUT_PROFILE_LOGITECH_JOYSTICK: {
-
-                if (fabsf(axes[0]) < 0.1) axes[0] = 0.f;
-                if (fabsf(axes[1]) < 0.1) axes[1] = 0.f;
-                main_axes = ImVec2(-axes[0] * buttons[0], -axes[1] * buttons[0]);
-
-                if ((axes[2] + 1.f) / 2.f != scalar_axis_device)
-                {
-                    scalar_axis_device = (axes[2] + 1.f) / 2.f;
-                    scalar_axis = scalar_axis_device;
-                }
-
-            } break;
-
-        }
+        for (int i = 0; i < INPUT_BUTTON_MAX_ENUM; i++) 
+            buttons[i] = joystick_buttons[input_button_mappings[input_device_profiles[input_device_selected_index]][i]];
+        for (int i = 0; i < INPUT_AXIS_MAX_ENUM; i++) 
+            axes[i] = joystick_axes[input_axes_mappings[input_device_profiles[input_device_selected_index]][i]];
     }
 
 }
@@ -141,22 +129,18 @@ void input_state::imgui_panel() {
 
     ImVec2 pos = ImGui::GetCursorScreenPos();
 
+    ImVec2 main_axes = ImVec2(axes[INPUT_AXIS_MAIN_X], axes[INPUT_AXIS_MAIN_Y]);
     main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.1f, 0.1f), (main_axes.x == 0.f && main_axes.y == 0.f) ? NULL : &main_axes);
+    axes[INPUT_AXIS_MAIN_X] = main_axes.x;
+    axes[INPUT_AXIS_MAIN_Y] = main_axes.y;
 
     ImGui::Text("Joystick %f %f", main_axes.x, main_axes.y);
 
-    if (ImGui::Button("Enable")) enable_button = true;
-    else enable_button = false;
-    if (ImGui::Button("Disable")) disable_button = true;
-    else disable_button = false;
-
-    if(enable_button) printf("enablee");
-    if(disable_button) printf("disablee");
+    if (ImGui::Button("Enable")) buttons[INPUT_BUTTON_ENABLE] = true;
+    if (ImGui::Button("Disable")) buttons[INPUT_BUTTON_DISABLE] = true;
 
     ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
 
-    ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &scalar_axis, 0.0f, 1.0f, "%.2f");
-
-    scaled_main_axes = ImVec2(main_axes.x * scalar_axis, main_axes.y * scalar_axis);
+    ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &axes[INPUT_AXIS_SCALAR], 0.0f, 1.0f, "%.2f");
 
 }

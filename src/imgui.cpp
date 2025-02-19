@@ -3,11 +3,11 @@
 #include <fstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <guiniverse/terminal.hpp>
 #include <guiniverse/imgui.hpp>
 #include <guiniverse/shared_data.hpp>
 #include <guiniverse/input.hpp>
 #include <guiniverse/rover_controller.hpp>
-#include <guiniverse/terminal.hpp>
 #include <imgui.h>
 
 static size_t selected_image_index = 0;

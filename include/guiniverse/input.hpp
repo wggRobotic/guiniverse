@@ -3,6 +3,22 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 
+enum InputButton
+{
+    INPUT_BUTTON_GAS,
+    INPUT_BUTTON_ENABLE,
+    INPUT_BUTTON_DISABLE,
+    INPUT_BUTTON_MAX_ENUM
+};
+
+enum InputAxis
+{
+    INPUT_AXIS_MAIN_X,
+    INPUT_AXIS_MAIN_Y,
+    INPUT_AXIS_SCALAR,
+    INPUT_AXIS_MAX_ENUM,
+};
+
 enum InputProfile 
 {
     INPUT_PROFILE_LOGITECH_JOYSTICK,
@@ -15,6 +31,14 @@ static const char* known_input_device_names[] = {
     "XBOX Controller"
 };
 
+static const int input_button_mappings[INPUT_PROFILE_MAX_ENUM][INPUT_BUTTON_MAX_ENUM] = {
+    {0},
+};
+
+static const int input_axes_mappings[INPUT_PROFILE_MAX_ENUM][INPUT_AXIS_MAX_ENUM] = {
+    {0, 1, 3},
+};
+
 struct input_state 
 {
 public:
@@ -23,10 +47,19 @@ public:
     void update();
     void imgui_panel();
 
-    ImVec2 get_main_axes() {return scaled_main_axes;};
+    bool get_button(int i) 
+    {
+        if(i < INPUT_BUTTON_MAX_ENUM) 
+            return buttons[i];
+        return false;
+    };
 
-    bool get_enable_button() {return enable_button;};
-    bool get_disable_button() {return disable_button;};
+    float get_axis(int i) 
+    {
+        if(i < INPUT_AXIS_MAX_ENUM) 
+            return axes[i];
+        return 0.f;
+    };
 
 private:
     
@@ -41,13 +74,6 @@ private:
 
     bool refresh_button = true;
 
-    ImVec2 main_axes = ImVec2(0.f, 0.f);
-    float scalar_axis = 1.f;
-    float scalar_axis_device = 1.f;
-
-    ImVec2 scaled_main_axes = ImVec2(0.f, 0.f);
-
-    bool enable_button = false;
-    bool disable_button = false;
-    bool gas_button = false;
+    bool buttons[INPUT_BUTTON_MAX_ENUM] = {false};
+    float axes[INPUT_AXIS_MAX_ENUM] = {0};
 };

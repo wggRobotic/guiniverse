@@ -69,7 +69,7 @@ void GuiniverseNode::run()
         {
             m_IsRunning = running;
         }
-        rclcpp::spin(shared_from_this());
+        rclcpp::spin_some(shared_from_this());
 
         if (!m_EnableMotorClientWaiting)
         {
@@ -79,9 +79,8 @@ void GuiniverseNode::run()
             {
                 std::lock_guard<std::mutex> lock(motor_enable_service_mutex);
                 is_set = motor_enable_service_is_set_status;
-                status = motor_enable_service_set_status;
+                status = motor_enable_service_set_status;                
             }
-
             if (is_set)
             {
                 if (!m_EnableMotorClient->service_is_ready()) 
@@ -105,8 +104,8 @@ void GuiniverseNode::run()
             }
 
         }
-        else if (m_EnableMotorClientWaiting && m_EnableMotorClientTimeSent + 5 > this->now().seconds()) {
-            RCLCPP_INFO(this->get_logger(), "Service didn't respond in time");
+        else if (m_EnableMotorClientWaiting && m_EnableMotorClientTimeSent + 5 < this->now().seconds()) {
+            RCLCPP_INFO(this->get_logger(), "Enable Service didn't respond in 5 seconds");
             m_EnableMotorClientWaiting = false; 
         }
 
