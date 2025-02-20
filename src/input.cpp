@@ -91,7 +91,7 @@ void input_state::ImGui_panel(char* label) {
             if (input_device_profiles[input_device_selected_index] == INPUT_PROFILE_UNKNOWN) ImGui::TextColored(ImVec4(1.0, 0.0, 0.0, 1.0), "Couldn't find input profile for this device");
             else 
             {
-                ImGui::Text("Invert axes");
+                ImGui::Text("Invert axes:");
                 char invert_text[128];
 
                 for (int i = 0; i < 16; i++) 

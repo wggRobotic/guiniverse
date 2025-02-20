@@ -49,11 +49,11 @@ private:
     bool input_devices_connected[GLFW_JOYSTICK_LAST + 1];
     char input_device_names[GLFW_JOYSTICK_LAST + 1][128];
     char input_device_profiles[GLFW_JOYSTICK_LAST + 1];
-    int input_device_selected_index = -1;
+    int input_device_selected_index = 0;
 
     bool refresh_button = true;
 
     bool buttons[32] = {false};
     float axes[16] = {0};
-    bool invert_axes[GLFW_JOYSTICK_LAST + 1][16] = {false};
+    bool invert_axes[GLFW_JOYSTICK_LAST + 1][16] = {{true, true, false, true}};
 };

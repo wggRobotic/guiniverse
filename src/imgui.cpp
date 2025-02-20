@@ -107,7 +107,7 @@ void imgui_thread()
     }
 
     input_state input;
-    rover_controller rv_controller;
+    rover_controller rv_controller(window);
 
     ImGuiTerminal terminal;
     terminal.Init();
