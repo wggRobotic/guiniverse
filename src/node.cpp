@@ -17,7 +17,7 @@ GuiniverseNode::GuiniverseNode()
     : Node("guiniverse"), m_Count(0), m_IsRunning(true)
 {
     m_Timer = this->create_wall_timer(100ms, std::bind(&GuiniverseNode::TimerCallback, this));
-    m_TwistPublisher = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+    m_TwistPublisher = create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
     m_GripperPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>("gripper", 10);
 
     m_BarcodeSubscriber = this->create_subscription<std_msgs::msg::String>(

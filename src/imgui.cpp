@@ -3,10 +3,10 @@
 #include <fstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <guiniverse/terminal.hpp>
+#include <guiniverse/ControlGui/Console.hpp>
 #include <guiniverse/imgui.hpp>
 #include <guiniverse/shared_data.hpp>
-#include <guiniverse/input.hpp>
+#include <guiniverse/ControlGui/JoystickInput.hpp>
 #include <guiniverse/rover_controller.hpp>
 #include <imgui.h>
 
@@ -106,11 +106,11 @@ void imgui_thread()
         return;
     }
 
-    input_state input;
+    JoystickInput input;
     rover_controller rv_controller(window);
 
-    ImGuiTerminal terminal;
-    terminal.Init();
+    Console console;
+    console.Init();
 
     glfwSetKeyCallback(window, on_key);
 
@@ -153,6 +153,7 @@ void imgui_thread()
 
         if (ImGui::Begin("Home"))
         {
+
             ImGui::Text("Shared Data: %s", display_data.c_str());
             ImGui::ColorEdit4("Clear Color", clear_color);
             ImGui::Checkbox("Show Styles", &show_styles);
@@ -220,7 +221,7 @@ void imgui_thread()
         ImGui::End();
 
         input.update();
-        input.ImGui_panel("Input");
+        input.ImGuiPanel("Input");
 
         rv_controller.get_input(input);
         rv_controller.ImGui_panel_control("Control");
@@ -261,7 +262,7 @@ void imgui_thread()
             ImGui::End();
         }
 
-        terminal.Draw();
+        console.ImGuiPanel();
 
         ImGui::Render();
 

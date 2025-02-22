@@ -1,4 +1,4 @@
-#include <guiniverse/terminal.hpp>
+#include <guiniverse/ControlGui/Console.hpp>
 #include <imgui.h>
 #include <unistd.h>   // For pipe, dup2
 #include <fcntl.h>    // For fcntl
@@ -7,21 +7,21 @@
 
 std::vector<std::string> log_lines;
 std::mutex log_mutex;
-int ImGuiTerminal::pipe_fd[2];
-std::thread ImGuiTerminal::capture_thread;
-std::atomic<bool> ImGuiTerminal::running = false;
-bool ImGuiTerminal::auto_scroll = true;
+int Console::pipe_fd[2];
+std::thread Console::capture_thread;
+std::atomic<bool> Console::running{false};
+bool Console::auto_scroll = false;
 
-ImGuiTerminal::ImGuiTerminal() {}
+Console::Console() {}
 
-ImGuiTerminal::~ImGuiTerminal() {
+Console::~Console() {
     running = false;
     if (capture_thread.joinable()) {
         capture_thread.join();
     }
 }
 
-void ImGuiTerminal::Init() {
+void Console::Init() {
     if (pipe(pipe_fd) == -1) {
         perror("pipe failed");
         return;
@@ -42,7 +42,7 @@ void ImGuiTerminal::Init() {
     capture_thread = std::thread(CaptureOutput);
 }
 
-void ImGuiTerminal::CaptureOutput() {
+void Console::CaptureOutput() {
     char buffer[512];
     while (running) {
         ssize_t count = read(pipe_fd[0], buffer, sizeof(buffer) - 1);
@@ -54,12 +54,7 @@ void ImGuiTerminal::CaptureOutput() {
     }
 }
 
-void ImGuiTerminal::Log(const char* text) {
-    std::lock_guard<std::mutex> lock(log_mutex);
-    log_lines.emplace_back(text);
-}
-
-void ImGuiTerminal::Draw() {
+void Console::ImGuiPanel() {
     ImGui::Begin("Terminal");
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);

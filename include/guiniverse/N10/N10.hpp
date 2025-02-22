@@ -1,11 +1,10 @@
 #pragma once
 
-#include <guiniverse/ControlGui/JoystickInput.hpp>
-#include <vector>
-#include <imgui.h>
-#include <GLFW/glfw3.h>
+#include <guiniverse/ControlGui/RobotController.hpp>
 
-struct rover_controller_wheel
+#include <guiniverse/ImageSystem.hpp>
+
+struct RoverWheel
 {
     ImVec2 position = ImVec2(0, 0);
 
@@ -14,30 +13,23 @@ struct rover_controller_wheel
 
 };
 
-struct rover_controller
+class N10 : public RobotController
 {
+
 public:
+    N10();
+    ~N10();
 
-    rover_controller(GLFWwindow* w);
+    void Init();
 
-    void add_wheel(ImVec2 position);
-
-    void ImGui_panel_control(char* label);
-    void ImGui_panel_visualisation(char* label);
-    void get_input(JoystickInput& input);
-    void process();
-    void exchange_ros_data();
-
-    ImVec2 get_linear_velocity() {return linear_velocity;};
-    float get_angular_velocity() {return angular_velocity;};
+    void ImGuiPanels(GLFWwindow* window, JoystickInput& input) override;
+    void onFrame() override;
 
 private:
 
-    rover_controller() = delete;
+    std::shared_ptr<ImageSystem> m_ImageSystem;
 
-    GLFWwindow* window;
-
-    std::vector<rover_controller_wheel> wheels;
+    std::vector<RoverWheel> wheels;
 
     ImVec2 main_axes = ImVec2(0.f, 0.f);
     float scalar = 0.5f;
@@ -62,4 +54,5 @@ private:
 
     bool should_set_motor_status = false;
     bool motor_status = false;
+
 };

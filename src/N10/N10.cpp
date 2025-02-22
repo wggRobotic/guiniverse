@@ -1,21 +1,21 @@
-#include <guiniverse/rover_controller.hpp>
-#include <guiniverse/shared_data.hpp>
+#include <guiniverse/N10/N10.hpp>
+
 #include <guiniverse/imgui_utils.hpp>
 
-rover_controller::rover_controller(GLFWwindow* w) : window(w) {
-
-    wheels.resize(6);
+N10::N10() : RobotController("N10", "n10")
+{
 }
 
-void rover_controller::add_wheel(ImVec2 position) {
-
-    rover_controller_wheel wheel;
-    wheel.position = position;
-    wheels.push_back(wheel);
-
+N10::~N10()
+{
 }
 
-void rover_controller::get_input(JoystickInput& input) {
+void N10::Init()
+{
+    m_ImageSystem = std::make_shared<ImageSystem>(shared_from_this());
+}
+
+void N10::ImGuiPanels(GLFWwindow* window, JoystickInput& input) {
 
     switch (input.getDeviceProfile())
     {
@@ -77,46 +77,7 @@ void rover_controller::get_input(JoystickInput& input) {
 
     dog_walk_button |= (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS);
 
-}
-
-void rover_controller::process() {
-
-    if (gripper_mode_button) gripper_mode = true;
-    else if (drive_mode_button) gripper_mode = false;
-
-    ImVec2 main_axes_scaled = ImVec2(main_axes.x * scalar * (gas_button ? 1.f : 0.f), main_axes.y * scalar * (gas_button ? 1.f : 0.f));
- 
-
-    if (dog_walk_button) {
-        linear_velocity.x = main_axes_scaled.y;
-        linear_velocity.y = main_axes_scaled.x;
-        angular_velocity = 0.f;
-    }
-    else {
-        linear_velocity.x = main_axes_scaled.y;
-        linear_velocity.y = 0.f;
-        angular_velocity = main_axes_scaled.x * (main_axes_scaled.y < 0 ? -1.f : 1.f);
-    }
-
-    should_set_motor_status = ( enable_button | disable_button );
-    motor_status = enable_button & should_set_motor_status;
-
-    main_axes = ImVec2(0.f, 0.f);
-    gas_button = false;
-
-    drive_mode_button = false;
-    gripper_mode_button = false;
-
-    enable_button = false;
-    disable_button = false;
-
-    dog_walk_button = false;
-    
-}
-
-void rover_controller::ImGui_panel_control(char* label) {
-
-    if (ImGui::Begin(label))
+    if (ImGui::Begin("Control"))
     {
 
         if (ImGui::RadioButton("Drive", !gripper_mode)) gripper_mode = false;
@@ -138,38 +99,15 @@ void rover_controller::ImGui_panel_control(char* label) {
         ImGui::End();
     }
 
-}
-
-void rover_controller::ImGui_panel_visualisation(char* label) {
-
-    if (ImGui::Begin(label))
+    if (ImGui::Begin("Visualization"))
     {
         
-
 
         ImGui::End();
     }
-
+    
 }
 
-void rover_controller::exchange_ros_data() {
-
-    {
-        std::lock_guard<std::mutex> lock(twist_mutex);
-    
-        shared_twist.linear.x = linear_velocity.x;
-        shared_twist.linear.y = linear_velocity.y;
-        shared_twist.angular.z = angular_velocity;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(motor_enable_service_mutex);
-
-        motor_enable_service_set_status = motor_status;
-
-        
-
-        motor_enable_service_is_set_status = should_set_motor_status;
-    }
+void N10::onFrame() {
 
 }

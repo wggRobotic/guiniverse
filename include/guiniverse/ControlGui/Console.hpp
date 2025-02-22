@@ -6,14 +6,13 @@
 #include <thread>
 #include <atomic>
 
-class ImGuiTerminal {
+class Console {
 public:
-    ImGuiTerminal();
-    ~ImGuiTerminal();
+    Console();
+    ~Console();
 
     void Init();
-    void Draw();
-    void Log(const char* text);
+    void ImGuiPanel();
 
 private:
     static void CaptureOutput();
