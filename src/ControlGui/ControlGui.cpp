@@ -2,7 +2,7 @@
 
 #include <thread>
 
-ControlGui::ControlGui(int RobotControllerRefreshRate) : m_RobotControllerRefreshRate(RobotControllerRefreshRate) {
+ControlGui::ControlGui(int RobotControllerRefreshRate) : m_RosRate(RobotControllerRefreshRate) {
     m_Console.Init();
 }
 
@@ -17,6 +17,7 @@ void ControlGui::run()
 {
 
     m_Running.store(true);
+    m_RobotSelected.store(NO_ROBOT_SELECTED);
 
     std::thread robot_controller_thread(&ControlGui::RobotControllerThreadFunction, this);
 
@@ -30,3 +31,18 @@ void ControlGui::stop()
     m_Running.store(false);
 }
 
+void ControlGui::RobotControllerThreadFunction() {
+
+    while (m_Running.load())
+    {
+
+        int robot_selected = m_RobotSelected.load();
+
+        if (robot_selected != NO_ROBOT_SELECTED)
+        {
+            m_Controllers.at(robot_selected)->onFrame();
+        }
+
+        m_RosRate.sleep();
+    }
+}

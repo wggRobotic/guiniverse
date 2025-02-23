@@ -55,7 +55,7 @@ void Console::CaptureOutput() {
 }
 
 void Console::ImGuiPanel() {
-    ImGui::Begin("Terminal");
+    ImGui::Begin("Console");
 
     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
 

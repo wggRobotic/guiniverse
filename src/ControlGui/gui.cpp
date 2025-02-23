@@ -45,6 +45,8 @@ void ControlGui::GuiFunction() {
 
         ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
+        int robot_selected = m_RobotSelected.load();
+
         if (ImGui::Begin("Home"))
         {
 
@@ -52,19 +54,21 @@ void ControlGui::GuiFunction() {
             ImGui::ColorEdit4("Clear Color", clear_color);
             ImGui::Checkbox("Show Styles", &show_styles);
             
-            if (ImGui::BeginCombo("Select which robot to control", m_RobotSelected == NO_ROBOT_SELECTED ? "No robot selected" : m_Controllers.at(m_RobotSelected)->getRobotName()))
+            if (ImGui::BeginCombo("Select which robot to control", robot_selected == NO_ROBOT_SELECTED ? "No robot selected" : m_Controllers.at(robot_selected)->getRobotName()))
             {
-                if (ImGui::Selectable("No robot selected", m_RobotSelected == NO_ROBOT_SELECTED))
-                    m_RobotSelected = NO_ROBOT_SELECTED;
+                if (ImGui::Selectable("No robot selected", robot_selected == NO_ROBOT_SELECTED))
+                    robot_selected  = NO_ROBOT_SELECTED;
 
                 for (int i = 0; i < m_Controllers.size(); i++)
                 {
-                    if (ImGui::Selectable(m_Controllers.at(i)->getRobotName(), m_RobotSelected == i)) 
-                        m_RobotSelected = i;
+                    if (ImGui::Selectable(m_Controllers.at(i)->getRobotName(), robot_selected == i)) 
+                        robot_selected = i;
                 }
                 
                 ImGui::EndCombo();
             }
+
+            m_RobotSelected.store(robot_selected);
 
         }
         ImGui::End();
@@ -72,9 +76,9 @@ void ControlGui::GuiFunction() {
         m_JoystickInput.update();
         m_JoystickInput.ImGuiPanel("Input");
 
-        if (m_RobotSelected != NO_ROBOT_SELECTED)
+        if (robot_selected != NO_ROBOT_SELECTED)
         {
-            m_Controllers.at(m_RobotSelected)->ImGuiPanels(window, m_JoystickInput);
+            m_Controllers.at(robot_selected)->ImGuiPanels(window, m_JoystickInput);
         }
         
 

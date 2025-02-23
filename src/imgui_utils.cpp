@@ -1,6 +1,7 @@
 #include <guiniverse/imgui_utils.hpp>
 
 #include <cmath>
+#include <stdio.h>
 
 ImVec2 imgui_joystick(const char* label, float size, ImVec2 dead_ranges, ImVec2* position, ImU32 color) {
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
@@ -43,4 +44,36 @@ ImVec2 imgui_joystick(const char* label, float size, ImVec2 dead_ranges, ImVec2*
     ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + size + ImGui::GetStyle().ItemSpacing.y));
 
     return joystick_position;
+}
+
+void imgui_arrow(ImVec2 start, float angle, float magnitude, ImU32 color, float thickness, float arrowSize, bool showAmplitude) 
+{
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 windowPos = ImGui::GetWindowPos();
+    start = ImVec2(start.x + windowPos.x, start.y + windowPos.y);
+
+    ImVec2 dir = ImVec2(-sinf(angle), -cosf(angle));
+
+    ImVec2 end = ImVec2(start.x + magnitude * dir.x, start.y + magnitude * dir.y);
+
+    if (magnitude > 0) {
+        draw_list->AddLine(start, end, color, thickness);
+    }
+
+
+    ImVec2 perp = ImVec2(-dir.y, dir.x);
+
+    ImVec2 arrowLeft = ImVec2(end.x - dir.x * arrowSize + perp.x * (arrowSize * 0.5f), 
+                               end.y - dir.y * arrowSize + perp.y * (arrowSize * 0.5f));
+    ImVec2 arrowRight = ImVec2(end.x - dir.x * arrowSize - perp.x * (arrowSize * 0.5f), 
+                                end.y - dir.y * arrowSize - perp.y * (arrowSize * 0.5f));
+
+    draw_list->AddTriangleFilled(end, arrowLeft, arrowRight, color);
+
+    if (showAmplitude) {
+        char label[32];
+        snprintf(label, sizeof(label), "%.2f", magnitude);
+        ImVec2 textPos = ImVec2((start.x + end.x) * 0.5f, (start.y + end.y) * 0.5f);
+        draw_list->AddText(textPos, IM_COL32(255, 255, 255, 255), label);
+    }
 }

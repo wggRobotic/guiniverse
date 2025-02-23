@@ -29,13 +29,14 @@ private:
     std::atomic<bool> m_Running;
     
     std::vector<std::shared_ptr<RobotController>> m_Controllers;
-    int32_t m_RobotSelected = NO_ROBOT_SELECTED;
+    std::atomic<int> m_RobotSelected;
 
 
     JoystickInput m_JoystickInput;
     Console m_Console;
 
     rclcpp::Clock m_RosClock;
-    int m_RobotControllerRefreshRate;
+
+    rclcpp::Rate m_RosRate;
 
 };

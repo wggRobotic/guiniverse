@@ -22,7 +22,15 @@ int main(int argc, char **argv)
     rclcpp::on_shutdown([]() { gui.stop(); });
 
     std::shared_ptr<N10> n10 = std::make_shared<N10>();
-    n10->Init();
+    n10->initImageSystem();
+
+    n10->addWheel( 0.152f,  0.105f, 0.05f, false);
+    n10->addWheel( 0.152f, -0.105f, 0.05f, true );
+    n10->addWheel( 0.0,     0.105f, 0.05f, false);
+    n10->addWheel( 0.0f,   -0.105f, 0.05f, true );
+    n10->addWheel(-0.152f,  0.105f, 0.05f, false);
+    n10->addWheel(-0.152f, -0.105f, 0.05f, true );
+
     std::shared_ptr<RobotController> idefix = std::make_shared<Idefix>();
 
     gui.addController(n10);

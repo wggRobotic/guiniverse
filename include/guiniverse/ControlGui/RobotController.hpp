@@ -11,7 +11,8 @@ class RobotController : public rclcpp::Node
 {
 public:
 
-    RobotController(const std::string& RobotName, const std::string& RosRobotName);
+    RobotController(const std::string& RobotName, const std::string& RosRobotName) 
+        : rclcpp::Node(RosRobotName + "_controller_node", "/" + RosRobotName), m_RobotName(RobotName), m_RosRobotName(RosRobotName) {};
 
     virtual ~RobotController() = default;
     
