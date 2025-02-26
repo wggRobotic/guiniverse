@@ -1,9 +1,4 @@
-// #include <guiniverse/imgui.hpp>
-// #include <guiniverse/ros.hpp>
-// #include <guiniverse/shared_data.hpp>
-
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 
 #include <guiniverse/ControlGui/ControlGui.hpp>
 #include <guiniverse/N10/N10.hpp>

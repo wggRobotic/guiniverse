@@ -2,10 +2,10 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <guiniverse/ControlGui/JoystickInput.hpp>
+
 #include <GLFW/glfw3.h>
 #include <imgui.h>
-
-#include <guiniverse/ControlGui/JoystickInput.hpp>
 
 class RobotController : public rclcpp::Node
 {

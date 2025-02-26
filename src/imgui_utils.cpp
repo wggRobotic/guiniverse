@@ -54,19 +54,18 @@ void imgui_arrow(ImVec2 start, float angle, float magnitude, ImU32 color, float 
 
     ImVec2 dir = ImVec2(-sinf(angle), -cosf(angle));
 
+    float mag_arrow = (magnitude >= 0.f ? (magnitude - arrowSize > 0.f ? magnitude - arrowSize : 0.f) : (magnitude + arrowSize < 0.f ? magnitude + arrowSize : 0.f));
+
     ImVec2 end = ImVec2(start.x + magnitude * dir.x, start.y + magnitude * dir.y);
 
-    if (magnitude > 0) {
-        draw_list->AddLine(start, end, color, thickness);
-    }
-
+    draw_list->AddLine(start, ImVec2(start.x + mag_arrow * dir.x, start.y + mag_arrow * dir.y), color, thickness);
 
     ImVec2 perp = ImVec2(-dir.y, dir.x);
 
-    ImVec2 arrowLeft = ImVec2(end.x - dir.x * arrowSize + perp.x * (arrowSize * 0.5f), 
-                               end.y - dir.y * arrowSize + perp.y * (arrowSize * 0.5f));
-    ImVec2 arrowRight = ImVec2(end.x - dir.x * arrowSize - perp.x * (arrowSize * 0.5f), 
-                                end.y - dir.y * arrowSize - perp.y * (arrowSize * 0.5f));
+    ImVec2 arrowLeft = ImVec2(end.x + dir.x * arrowSize * (magnitude >= 0 ? -1.f : 1.f) + perp.x * (arrowSize * 0.5f), 
+                              end.y + dir.y * arrowSize * (magnitude >= 0 ? -1.f : 1.f) + perp.y * (arrowSize * 0.5f));
+    ImVec2 arrowRight = ImVec2(end.x + dir.x * arrowSize * (magnitude >= 0 ? -1.f : 1.f) - perp.x * (arrowSize * 0.5f), 
+                               end.y + dir.y * arrowSize * (magnitude >= 0 ? -1.f : 1.f) - perp.y * (arrowSize * 0.5f));
 
     draw_list->AddTriangleFilled(end, arrowLeft, arrowRight, color);
 

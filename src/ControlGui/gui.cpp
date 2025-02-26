@@ -5,8 +5,6 @@
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 
-#include <guiniverse/rover_controller.hpp>
-
 void ControlGui::GuiFunction() {
 
     glfwDefaultWindowHints();
@@ -14,8 +12,6 @@ void ControlGui::GuiFunction() {
     glfwWindowHint(GLFW_SAMPLES, 4);
     auto window = glfwCreateWindow(800, 600, "GUINIVERSE", nullptr, nullptr);
     if (!window) return;
-
-    rover_controller rv_controller(window);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -85,8 +81,13 @@ void ControlGui::GuiFunction() {
         if (show_styles)
         {
             if (ImGui::Begin("Styles", &show_styles))
+            {
                 ImGui::ShowStyleEditor();
+
+            }
             ImGui::End();
+                
+            
         }
 
         m_Console.ImGuiPanel();

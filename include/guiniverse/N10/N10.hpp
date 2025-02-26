@@ -1,14 +1,14 @@
 #pragma once
 
+#include <guiniverse/ImageSystem.hpp>
 #include <guiniverse/ControlGui/RobotController.hpp>
 
+#include <atomic>
 #include <mutex>
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_srvs/srv/set_bool.hpp>
-
-#include <guiniverse/ImageSystem.hpp>
 
 struct RoverWheel
 {
@@ -48,34 +48,38 @@ private:
 
     std::shared_ptr<ImageSystem> m_ImageSystem;
 
+    std::mutex m_WheelsMutex;
     std::vector<RoverWheel> m_Wheels;
+
+    std::mutex m_GripperMutex;
 
     std::mutex m_InputMutex;
 
-    ImVec2 main_axes = ImVec2(0.f, 0.f);
-    float scalar = 0.5f;
-    float joystick_scalar = 0.5f;
+    struct {
+        ImVec2 main_axes = ImVec2(0.f, 0.f);
+        float scalar = 0.5f;
+        float joystick_scalar = 0.5f;
 
-    bool gas_button = false;
-    bool dog_walk_button = false;
-    
-    bool enable_button = false;
-    bool disable_button = false;
-    bool physical_enable_button = false;
-    bool physical_disable_button = false;
+        bool gas_button = false;
+        bool dog_walk_button = false;
+        
+        bool enable_button = false;
+        bool disable_button = false;
+        bool physical_enable_button = false;
+        bool physical_disable_button = false;
 
-    bool gripper_mode = false;
+        ImVec2 linear_velocity = ImVec2(0.f, 0.f);
+        float angular_velocity = 0.f;
 
-    ImVec2 linear_velocity = ImVec2(0.f, 0.f);
-    float angular_velocity = 0.f;
+        bool should_set_motor_status = false;
+        bool motor_status = false;
 
-    bool should_set_motor_status = false;
-    bool motor_status = false;
+    } m_Input;
+
+    std::atomic<bool> m_GripperMode{false};
 
     std::mutex m_BarcodesMutex;
     std::map<std::string, size_t> m_Barcodes;
-
-    std::mutex m_WheelsMutex;
 
     //ros2
 
