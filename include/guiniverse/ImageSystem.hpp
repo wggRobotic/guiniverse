@@ -35,7 +35,6 @@ struct ImageSystemImageProcessor
     unsigned int texture_height = 0;
 
     bool dirty = false;
-    bool init = false;
 };
 
 class ImageSystem : public image_transport::ImageTransport
@@ -44,6 +43,8 @@ class ImageSystem : public image_transport::ImageTransport
 public:
 
     ImageSystem(std::shared_ptr<rclcpp::Node> Node);
+
+    ~ImageSystem();
 
     void addTopic(const std::string& TopicName);
 

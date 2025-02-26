@@ -36,7 +36,14 @@ ImageSystem::ImageSystem(std::shared_ptr<rclcpp::Node> Node) : image_transport::
     m_ImageProcessors.reserve(5);
 }
 
-void ImageSystem::addTopic(const std::string& TopicName) {
+ImageSystem::~ImageSystem()
+{
+    for (int i = 0; i < m_ImageProcessors.size(); i++)
+        GLCALL(glDeleteTextures(1, &m_ImageProcessors.at(i).texture));
+}
+
+void ImageSystem::addTopic(const std::string& TopicName)
+{
 
     std::lock_guard<std::mutex> lock(m_ImageProcessorMutex);
 
@@ -46,6 +53,16 @@ void ImageSystem::addTopic(const std::string& TopicName) {
 
     m_ImageProcessors.at(current_size).topic_name = TopicName;
     m_ImageProcessors.at(current_size).subscriber = subscribe(TopicName, 10, MAKE_CALLBACK(current_size));
+
+    GLCALL(glGenTextures(1, &m_ImageProcessors.at(current_size).texture));
+    GLCALL(glBindTexture(GL_TEXTURE_2D, m_ImageProcessors.at(current_size).texture));
+
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+    GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
 void ImageSystem::setImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)
@@ -63,7 +80,8 @@ void ImageSystem::setImage(size_t index, const std::vector<uint8_t> &data, uint3
     m_ImageProcessors.at(index).holds_image = true;
 }
 
-void ImageSystem::ImGuiPanels() {
+void ImageSystem::ImGuiPanels()
+{
 
     std::lock_guard<std::mutex> lock(m_ImageProcessorMutex);
 
@@ -73,20 +91,6 @@ void ImageSystem::ImGuiPanels() {
         {
             if (m_ImageProcessors.at(i).holds_image)
             {
-                if (m_ImageProcessors.at(i).init == false)
-                {
-                    GLCALL(glGenTextures(1, &m_ImageProcessors.at(i).texture));
-                    GLCALL(glBindTexture(GL_TEXTURE_2D, m_ImageProcessors.at(i).texture));
-
-                    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-                    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-                    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-                    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-
-                    GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
-
-                    m_ImageProcessors.at(i).init = true;
-                }
 
                 if (m_ImageProcessors.at(i).dirty)
                 {

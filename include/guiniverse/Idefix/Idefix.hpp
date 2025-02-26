@@ -10,6 +10,10 @@ public:
     Idefix();
     ~Idefix();
 
-    void ImGuiPanels(GLFWwindow* window, JoystickInput& input) override;
     void onFrame() override;
+
+    void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
+    void onGuiStart() override;
+    void onGuiShutdown() override;
+    
 };

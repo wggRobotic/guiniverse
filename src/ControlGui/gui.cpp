@@ -30,6 +30,10 @@ void ControlGui::GuiFunction() {
     float clear_color[]{0.00f, 0.00f, 0.00f, 0.35f};
     bool show_styles = false;
 
+    for (int i = 0; i < m_Controllers.size(); i++)
+        m_Controllers.at(i)->onGuiStart();
+
+
     while (!glfwWindowShouldClose(window) && m_Running.load())
     {
 
@@ -74,7 +78,7 @@ void ControlGui::GuiFunction() {
 
         if (robot_selected != NO_ROBOT_SELECTED)
         {
-            m_Controllers.at(robot_selected)->ImGuiPanels(window, m_JoystickInput);
+            m_Controllers.at(robot_selected)->onGuiFrame(window, m_JoystickInput);
         }
         
 
@@ -109,6 +113,9 @@ void ControlGui::GuiFunction() {
             glfwMakeContextCurrent(window);
         }
     }
+
+    for (int i = 0; i < m_Controllers.size(); i++)
+        m_Controllers.at(i)->onGuiShutdown();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

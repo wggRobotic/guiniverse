@@ -16,8 +16,11 @@ public:
 
     virtual ~RobotController() = default;
     
-    virtual void ImGuiPanels(GLFWwindow* window, JoystickInput& input) = 0;
     virtual void onFrame() = 0;
+    
+    virtual void onGuiFrame(GLFWwindow* window, JoystickInput& input) = 0;
+    virtual void onGuiStart() = 0;
+    virtual void onGuiShutdown() = 0;
 
     const char* getRobotName() {return m_RobotName.c_str();};
 

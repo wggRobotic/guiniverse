@@ -26,16 +26,6 @@ N10::~N10()
 {
 }
 
-void N10::initImageSystem()
-{
-    m_ImageSystem = std::make_shared<ImageSystem>(shared_from_this());
-
-    m_ImageSystem->addTopic("front/color");
-    m_ImageSystem->addTopic("rear/color");
-    m_ImageSystem->addTopic("gripper/color");
-
-}
-
 void N10::addWheel(float x, float y, float radius, bool invert) 
 {
     std::lock_guard<std::mutex> lock(m_WheelsMutex);
@@ -45,7 +35,19 @@ void N10::addWheel(float x, float y, float radius, bool invert)
     m_Wheels.push_back(wheel);
 }
 
-void N10::ImGuiPanels(GLFWwindow* window, JoystickInput& input)
+void N10::onGuiStart() {
+    m_ImageSystem = std::make_shared<ImageSystem>(shared_from_this());
+
+    m_ImageSystem->addTopic("front/color");
+    m_ImageSystem->addTopic("rear/color");
+    m_ImageSystem->addTopic("gripper/color");
+}
+
+void N10::onGuiShutdown() {
+    m_ImageSystem.reset();
+}
+
+void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 {
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
@@ -109,7 +111,7 @@ void N10::ImGuiPanels(GLFWwindow* window, JoystickInput& input)
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
-        m_Input.main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.1f, 0.1f), (m_Input.main_axes.x == 0.f && m_Input.main_axes.y == 0.f) ? 0 : &m_Input.main_axes, (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
+        m_Input.main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.2f, 0.2f), (m_Input.main_axes.x == 0.f && m_Input.main_axes.y == 0.f) ? 0 : &m_Input.main_axes, (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
 
         ImGui::Text("Joystick %f %f", m_Input.main_axes.x, m_Input.main_axes.y);
 
@@ -130,9 +132,9 @@ void N10::ImGuiPanels(GLFWwindow* window, JoystickInput& input)
 
             for(int i = 0; i < m_Wheels.size(); i++)
             {
-                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 1000.f + 200.f, -m_Wheels.at(i).x * 1000.f + 200.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
+                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 800.f + 200.f, -m_Wheels.at(i).x * 800.f + 400.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
                 
-                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 1000.f + 200.f, -m_Wheels.at(i).x * 1000.f + 200.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, true);
+                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 800.f + 200.f, -m_Wheels.at(i).x * 800.f + 400.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, true);
             }
             
             

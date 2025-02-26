@@ -8,10 +8,23 @@ Idefix::~Idefix()
 {
 }
 
-void Idefix::ImGuiPanels(GLFWwindow* window, JoystickInput& input) {
+
+void Idefix::onFrame()
+{
 
 }
 
-void Idefix::onFrame() {
+void Idefix::onGuiStart()
+{
+
+}
+
+void Idefix::onGuiShutdown()
+{
+
+}
+
+void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
+{
 
 }

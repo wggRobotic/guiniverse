@@ -31,10 +31,13 @@ public:
     N10();
     ~N10();
 
-    void initImageSystem();
-    void addWheel(float x, float y, float radius, bool invert);
-    void ImGuiPanels(GLFWwindow* window, JoystickInput& input) override;
     void onFrame() override;
+
+    void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
+    void onGuiStart() override;
+    void onGuiShutdown() override;
+
+    void addWheel(float x, float y, float radius, bool invert);
 
     void BarcodeCallback(const std_msgs::msg::String::SharedPtr msg);
 
