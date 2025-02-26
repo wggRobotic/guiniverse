@@ -28,11 +28,14 @@ struct ImageSystemImageProcessor
     image_transport::Subscriber subscriber;
     
     Image image;
+    bool holds_image = false;
+
     unsigned int texture;
-    unsigned int texture_width = 10;
-    unsigned int texture_height = 10;
+    unsigned int texture_width = 0;
+    unsigned int texture_height = 0;
 
     bool dirty = false;
+    bool init = false;
 };
 
 class ImageSystem : public image_transport::ImageTransport
@@ -54,5 +57,4 @@ private:
 
     std::mutex m_ImageProcessorMutex;
     std::vector<ImageSystemImageProcessor> m_ImageProcessors;
-
 };
