@@ -26,6 +26,16 @@ N10::~N10()
 {
 }
 
+void N10::initImageSystem()
+{
+    m_ImageSystem = std::make_shared<ImageSystem>(shared_from_this());
+}
+
+void N10::addImageTopic(const std::string& TopicName)
+{
+    m_ImageSystem->addTopic(TopicName);
+}
+
 void N10::addWheel(float x, float y, float radius, bool invert) 
 {
     std::lock_guard<std::mutex> lock(m_WheelsMutex);
@@ -35,16 +45,14 @@ void N10::addWheel(float x, float y, float radius, bool invert)
     m_Wheels.push_back(wheel);
 }
 
-void N10::onGuiStart() {
-    m_ImageSystem = std::make_shared<ImageSystem>(shared_from_this());
-
-    m_ImageSystem->addTopic("front/color");
-    m_ImageSystem->addTopic("rear/color");
-    m_ImageSystem->addTopic("gripper/color");
+void N10::onGuiStart() 
+{
+    
 }
 
-void N10::onGuiShutdown() {
-    m_ImageSystem.reset();
+void N10::onGuiShutdown() 
+{
+    m_ImageSystem->onGuiShutdown();
 }
 
 void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)

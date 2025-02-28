@@ -37,6 +37,10 @@ public:
     void onGuiStart() override;
     void onGuiShutdown() override;
 
+    void initImageSystem();
+
+    void addImageTopic(const std::string& TopicName);
+
     void addWheel(float x, float y, float radius, bool invert);
 
     void BarcodeCallback(const std_msgs::msg::String::SharedPtr msg);

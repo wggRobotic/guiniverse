@@ -35,6 +35,7 @@ struct ImageSystemImageProcessor
     unsigned int texture_height = 0;
 
     bool dirty = false;
+    bool init = false;
 };
 
 class ImageSystem : public image_transport::ImageTransport
@@ -44,13 +45,13 @@ public:
 
     ImageSystem(std::shared_ptr<rclcpp::Node> Node);
 
-    ~ImageSystem();
-
     void addTopic(const std::string& TopicName);
 
     void setImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding);
 
     void ImGuiPanels();
+
+    void onGuiShutdown();
 
 private:
 

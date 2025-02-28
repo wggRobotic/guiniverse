@@ -2,6 +2,7 @@
 
 Idefix::Idefix() : RobotController("Idefix", "idefix")
 {
+    m_TwistPublisher = create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 }
 
 Idefix::~Idefix()
