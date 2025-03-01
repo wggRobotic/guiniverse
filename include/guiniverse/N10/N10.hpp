@@ -2,6 +2,7 @@
 
 #include <guiniverse/ImageSystem.hpp>
 #include <guiniverse/ControlGui/RobotController.hpp>
+#include <guiniverse/DataCaptureSystem.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -37,14 +38,6 @@ public:
     void onGuiStart() override;
     void onGuiShutdown() override;
 
-    void initImageSystem();
-
-    void addImageTopic(const std::string& TopicName);
-
-    void addWheel(float x, float y, float radius, bool invert);
-
-    void BarcodeCallback(const std_msgs::msg::String::SharedPtr msg);
-
     void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void WheelsServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void GripperServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
@@ -53,7 +46,10 @@ public:
 
 private:
 
+    void addWheel(float x, float y, float radius, bool invert);
+
     std::shared_ptr<ImageSystem> m_ImageSystem;
+    std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 
     std::mutex m_WheelsMutex;
     std::vector<RoverWheel> m_Wheels;
@@ -72,14 +68,9 @@ private:
         
         bool enable_button = false;
         bool disable_button = false;
-        bool physical_enable_button = false;
-        bool physical_disable_button = false;
 
         ImVec2 linear_velocity = ImVec2(0.f, 0.f);
         float angular_velocity = 0.f;
-
-        bool should_set_motor_status = false;
-        bool motor_status = false;
 
     } m_Input;
 
@@ -89,8 +80,6 @@ private:
     std::map<std::string, size_t> m_Barcodes;
 
     //ros2
-
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr m_BarcodeSubscriber;
 
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsServoFeedbackSubscriber;

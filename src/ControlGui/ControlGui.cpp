@@ -40,7 +40,11 @@ void ControlGui::RobotControllerThreadFunction() {
 
         if (robot_selected != NO_ROBOT_SELECTED)
         {
+            m_Controllers.at(robot_selected)->spin_some();
+            
             m_Controllers.at(robot_selected)->onFrame();
+
+            m_Controllers.at(robot_selected)->spin_some();
         }
 
         m_RosRate.sleep();
