@@ -23,9 +23,9 @@ int main(int argc, char **argv)
 
     gui.run();
 
-    glfwTerminate();
-
     rclcpp::shutdown();
+
+    glfwTerminate();
 
     return 0;
 }

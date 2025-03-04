@@ -17,51 +17,88 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
 
-        m_Input.main_axes = ImVec2(0.f, 0.f);
+        m_Input.drive.main_axis_x = 0.f;
+        m_Input.drive.main_axis_y = 0.f;
 
-        m_Input.gas_button = false;
-        m_Input.dog_walk_button = false;
-        m_Input.enable_button = false;
-        m_Input.disable_button = false;
+        m_Input.drive.gas_button = false;
+        m_Input.drive.dog_walk_button = false;
+
+        
+        m_Input.drive.enable_button_physical = false;
+        m_Input.drive.disable_button_physical = false;
 
         auto device_name = input.getDeviceName();
 
         if (device_name == "Logitech Logitech Extreme 3D")
         {
-            m_Input.main_axes = ImVec2(input.getAxis(0), input.getAxis(1));
-
-            float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
-            if (new_joystick_scalar != m_Input.joystick_scalar) {
-                m_Input.joystick_scalar = new_joystick_scalar;
-                m_Input.scalar = new_joystick_scalar;
-            }
-
-            m_Input.gas_button |= input.getButton(0);
-            m_Input.dog_walk_button |= input.getButton(1);
 
             if (input.getButton(8)) m_GripperMode.store(false);
             else if (input.getButton(9)) m_GripperMode.store(true);
+
+            if (!m_GripperMode.load())
+            {
+                m_Input.drive.main_axis_x = input.getAxis(0);
+                m_Input.drive.main_axis_y = input.getAxis(1);
+
+                float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
+                if (new_joystick_scalar != m_Input.drive.scalar_axis_joystick) {
+                    m_Input.drive.scalar_axis_joystick = new_joystick_scalar;
+                    m_Input.drive.scalar_axis = new_joystick_scalar;
+                }
+
+                m_Input.drive.gas_button |= input.getButton(0);
+                m_Input.drive.dog_walk_button |= input.getButton(1);
+            }
+            else
+            {
+                m_Input.gripper.forward_axis = input.getAxis(1);
+                m_Input.gripper.up_axis = input.getAxis(5);
+
+                float new_ground_angle_axis = input.getAxis(3);
+                if (new_ground_angle_axis != m_Input.gripper.ground_angle_axis_joystick) {
+                    m_Input.gripper.ground_angle_axis_joystick = new_ground_angle_axis;
+                    m_Input.gripper.ground_angle_axis = new_ground_angle_axis;
+                }
+            }
             
-            m_Input.enable_button |= input.getButton(10);
-            m_Input.disable_button |= input.getButton(11);
+            m_Input.drive.enable_button_physical |= input.getButton(10);
+            m_Input.drive.disable_button_physical |= input.getButton(11);
+
+            m_Input.gripper.pos0_button = input.getButton(6);
+            m_Input.gripper.pos0_button = input.getButton(7);
         }
 
-        if (glfwGetKey(window, GLFW_KEY_A)) m_Input.main_axes.x = 1.f;
-        else if (glfwGetKey(window, GLFW_KEY_D)) m_Input.main_axes.x = -1.f;
-        if (glfwGetKey(window, GLFW_KEY_W)) m_Input.main_axes.y = 1.f;
-        else if (glfwGetKey(window, GLFW_KEY_S)) m_Input.main_axes.y = -1.f;
+        bool key_w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS), 
+        key_a = (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS),
+        key_s = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS), 
+        key_d = (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS); 
 
-        float length = sqrtf(m_Input.main_axes.x * m_Input.main_axes.x + m_Input.main_axes.y * m_Input.main_axes.y);
-        if (length > 1.0f) m_Input.main_axes = ImVec2(m_Input.main_axes.x / length, m_Input.main_axes.y / length);
+        if (key_w || key_a || key_s || key_d)
+        {
+            m_Input.drive.main_axis_x = 0.f;
+            m_Input.drive.main_axis_y = 0.f;
 
-        m_Input.gas_button |= glfwGetKey(window, GLFW_KEY_SPACE);
-        m_Input.dog_walk_button |= glfwGetKey(window, GLFW_KEY_M);
+            if (key_w) m_Input.drive.main_axis_y = 1.f;
+            if (key_a) m_Input.drive.main_axis_x = 1.f;
+            if (key_s) m_Input.drive.main_axis_y = -1.f;
+            if (key_d) m_Input.drive.main_axis_x = -1.f;
+        }
+
+        float length = sqrtf(m_Input.drive.main_axis_x * m_Input.drive.main_axis_x + m_Input.drive.main_axis_y * m_Input.drive.main_axis_y);
+        if (length > 1.0f) 
+        {
+            m_Input.drive.main_axis_x = m_Input.drive.main_axis_x / length;
+            m_Input.drive.main_axis_y = m_Input.drive.main_axis_y / length;
+        }
+        
+        m_Input.drive.gas_button |= glfwGetKey(window, GLFW_KEY_SPACE);
+        m_Input.drive.dog_walk_button |= glfwGetKey(window, GLFW_KEY_M);
 
         if (glfwGetKey(window, GLFW_KEY_T)) m_GripperMode.store(false);
         if (glfwGetKey(window, GLFW_KEY_G)) m_GripperMode.store(true);
 
-        m_Input.enable_button |= glfwGetKey(window, GLFW_KEY_F);
-        m_Input.disable_button |= glfwGetKey(window, GLFW_KEY_R);
+        m_Input.drive.enable_button_physical |= glfwGetKey(window, GLFW_KEY_F);
+        m_Input.drive.disable_button_physical |= glfwGetKey(window, GLFW_KEY_R);
 
     }
 
@@ -74,16 +111,23 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 
         ImVec2 pos = ImGui::GetCursorScreenPos();
 
-        m_Input.main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.2f, 0.2f), (m_Input.main_axes.x == 0.f && m_Input.main_axes.y == 0.f) ? 0 : &m_Input.main_axes, (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
+        ImVec2 drive_joystick_axes = ImVec2(m_Input.drive.main_axis_x, m_Input.drive.main_axis_y);
 
-        ImGui::Text("Joystick %f %f", m_Input.main_axes.x, m_Input.main_axes.y);
+        drive_joystick_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.2f, 0.2f), (drive_joystick_axes.x == 0.f && drive_joystick_axes.y == 0.f) ? 0 : &drive_joystick_axes, (m_Input.drive.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
 
-        if (ImGui::Button("Enable")) m_Input.enable_button = true;
-        if (ImGui::Button("Disable")) m_Input.disable_button = true;
+        m_Input.drive.main_axis_x = drive_joystick_axes.x;
+        m_Input.drive.main_axis_y = drive_joystick_axes.y;
+
+        ImGui::Text("Joystick %f %f", drive_joystick_axes.x, drive_joystick_axes.y);
+
+        ImGui::Button("Enable");
+        if (ImGui::IsItemActive()) m_Input.drive.enable_button_physical = true;
+        ImGui::Button("Disable");
+        if (ImGui::IsItemActive()) m_Input.drive.disable_button_physical = true;
 
         ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
 
-        ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &m_Input.scalar, 0.0f, 1.0f, "%.2f");
+        ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &m_Input.drive.scalar_axis, 0.0f, 1.0f, "%.2f");
 
     }
     ImGui::End();

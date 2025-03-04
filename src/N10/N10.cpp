@@ -3,13 +3,13 @@
 N10::N10() : RobotController("N10", "n10")
 {
 
-    m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpms/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
-    m_WheelsServoFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/servo/feedback", 10, std::bind(&N10::WheelsServoFeedbackCallback, this, std::placeholders::_1));
-    m_GripperServoFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/servo/feedback", 10, std::bind(&N10::GripperServoFeedbackCallback, this, std::placeholders::_1));
+    m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
+    m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsServoFeedbackCallback, this, std::placeholders::_1));
+    m_GripperFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/feedback", 10, std::bind(&N10::GripperServoFeedbackCallback, this, std::placeholders::_1));
 
-    m_WheelsRPMPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpms/cmd", 10);
-    m_WheelsServoPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/servo/cmd", 10);
-    m_GripperServoPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/servo/cmd", 10);
+    m_WheelsRPMPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
+    m_WheelsAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
+    m_GripperPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/cmd", 10);
 
     m_TurtleTwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
@@ -26,9 +26,9 @@ N10::N10() : RobotController("N10", "n10")
 
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
-    m_ImageSystem->addTopic("front/color");
-    m_ImageSystem->addTopic("rear/color");
-    m_ImageSystem->addTopic("gripper/color");
+    m_ImageSystem->addTopic("front/cam/color");
+    m_ImageSystem->addTopic("rear/cam/color");
+    m_ImageSystem->addTopic("gripper/cam/color");
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
 
