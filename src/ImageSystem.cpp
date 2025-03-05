@@ -45,7 +45,9 @@ void ImageSystem::addTopic(const std::string& TopicName)
     m_ImageProcessors.resize(current_size + 1);
 
     m_ImageProcessors.at(current_size).topic_name = TopicName;
-    m_ImageProcessors.at(current_size).subscriber = subscribe(TopicName, 10, MAKE_CALLBACK(current_size));
+
+    image_transport::TransportHints transport_hints(m_Node.get(), "compressed");
+    m_ImageProcessors.at(current_size).subscriber = subscribe(TopicName, 10, MAKE_CALLBACK(current_size), nullptr, &transport_hints);
 }
 
 void ImageSystem::setImage(size_t index, const std::vector<uint8_t> &data, uint32_t width, uint32_t height, uint32_t step, const std::string &encoding)

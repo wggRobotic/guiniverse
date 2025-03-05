@@ -46,6 +46,52 @@ ImVec2 imgui_joystick(const char* label, float size, ImVec2 dead_ranges, ImVec2*
     return joystick_position;
 }
 
+float imgui_joyslider(const char* label, float size, float dead_range, float* position)
+{
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+
+    ImGui::InvisibleButton(label, ImVec2(size * 0.2f, size));
+
+    float joyslider_position;
+
+    if (position != 0) joyslider_position = *position;
+    else if (ImGui::IsItemActive()) 
+    {
+        ImVec2 mouse_pos = ImGui::GetMousePos();
+
+        joyslider_position = 1.0f - 2.0f * ((mouse_pos.y - cursorPos.y) / size);
+
+    } 
+    else joyslider_position = 0.f;
+
+    if (joyslider_position > 1.f) 
+        joyslider_position = 1.f;
+    else if (joyslider_position < -1.f) 
+        joyslider_position = -1.f;
+    
+    if (fabsf(joyslider_position) < dead_range) joyslider_position = 0.0f;
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImVec2 handle_mid = ImVec2(cursorPos.x + 0.5f * size * 0.2f, cursorPos.y + 0.5f * size);
+
+    draw_list->AddRectFilled(
+        ImVec2(handle_mid.x - size * 0.02f, cursorPos.y), 
+        ImVec2(handle_mid.x + size * 0.02f, cursorPos.y + size), 
+        IM_COL32(200, 200, 200, 255)
+    );
+    draw_list->AddCircleFilled(
+        ImVec2(handle_mid.x, handle_mid.y - joyslider_position * 0.5f * size), 
+        size * 0.1f, 
+        IM_COL32(255, 0, 0, 255), 
+        32
+    );
+
+    ImGui::SetCursorScreenPos(ImVec2(cursorPos.x, cursorPos.y + size + ImGui::GetStyle().ItemSpacing.y));
+
+    return joyslider_position;
+}
+
 void imgui_arrow(ImVec2 start, float angle, float magnitude, ImU32 color, float thickness, float arrowSize, bool showAmplitude) 
 {
     ImDrawList* draw_list = ImGui::GetWindowDrawList();

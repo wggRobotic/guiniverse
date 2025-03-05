@@ -81,18 +81,13 @@ private:
             float up_axis = 0.f;
             float forward_axis = 0.f;
             float ground_angle_axis = 0.f;
-            float ground_angle_axis_joystick = 0.f;
 
             bool pos0_button = false;
             bool pos1_button = false;
 
-            bool open_button = false;
-            bool close_button = false;
+            float gripper_state = 0.5f;
+            float gripper_state_joystick = 0.5f;
         } gripper;
-        
-        
-
-        
 
     } m_Input;
 

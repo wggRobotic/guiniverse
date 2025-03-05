@@ -10,6 +10,11 @@ void N10::onFrame()
         bool gas = false;
         bool enable_service = false;
         bool enable_service_enable;
+
+        float gripper_x = 0.f;
+        float gripper_y = 0.f;
+        float gripper_ground_angle = 0.f;
+        float gripper_state = 0.f;
     }
     drive_input;
 
@@ -50,6 +55,9 @@ void N10::onFrame()
             }
         }
         else m_Input.drive.disable_button = false;
+
+
+
     }
 
     {
