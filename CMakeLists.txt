@@ -23,6 +23,7 @@ find_package(std_srvs REQUIRED)
 find_package(OpenGL REQUIRED) 
 find_package(PkgConfig REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(edu_robot REQUIRED)
 pkg_check_modules(GLEW REQUIRED glew)
 
 # Add GLFW
@@ -66,6 +67,7 @@ ament_target_dependencies(main
   cv_bridge
   image_transport
   compressed_image_transport
+  edu_robot
   std_srvs
 )
 

@@ -17,12 +17,13 @@ N10::N10() : RobotController("N10", "n10")
 
     m_Wheels.reserve(6);
 
-    addWheel( 0.152f,  0.105f, 0.05f, false);
-    addWheel( 0.152f, -0.105f, 0.05f, true );
-    addWheel( 0.0,     0.105f, 0.05f, false);
-    addWheel( 0.0f,   -0.105f, 0.05f, true );
-    addWheel(-0.152f,  0.105f, 0.05f, false);
-    addWheel(-0.152f, -0.105f, 0.05f, true );
+    addWheel( 0.152f,  0.105f, 0.055f, true ); //0
+    addWheel( 0.152f, -0.105f, 0.055f, false); //1
+    addWheel( 0.0,     0.105f, 0.052f, true);  //2
+    addWheel( 0.0f,   -0.105f, 0.052f, false); //3
+    addWheel(-0.152f,  0.105f, 0.055f, true ); //4
+    addWheel(-0.152f, -0.105f, 0.055f, false); //5
+    
 
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 

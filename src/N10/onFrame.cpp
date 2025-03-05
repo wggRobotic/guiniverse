@@ -29,9 +29,9 @@ void N10::onFrame()
             drive_input.ang = 0.f;
         }
         else {
-            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis;
+            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.4f;
             drive_input.lin_y = 0.f;
-            drive_input.ang = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * (m_Input.drive.main_axis_y * m_Input.drive.scalar_axis < 0 ? -1.f : 1.f) * 2.f;
+            drive_input.ang = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * (m_Input.drive.main_axis_y * m_Input.drive.scalar_axis < 0 ? -1.f : 1.f) * 2.5f;
         }
 
         if (m_Input.drive.enable_button_physical)
