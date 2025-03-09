@@ -4,12 +4,17 @@ N10::N10() : RobotController("N10", "n10")
 {
 
     m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
-    m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsServoFeedbackCallback, this, std::placeholders::_1));
-    m_GripperFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/feedback", 10, std::bind(&N10::GripperServoFeedbackCallback, this, std::placeholders::_1));
+    m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
 
     m_WheelsRPMPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
     m_WheelsAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
-    m_GripperPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/cmd", 10);
+    m_GripperAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/angle/cmd", 10);
+    m_GripperAngleMessage.data.resize(4);
+    m_GripperAngleMessage.data[0] = m_Gripper.drive_position_angles[0];
+    m_GripperAngleMessage.data[1] = m_Gripper.drive_position_angles[1];
+    m_GripperAngleMessage.data[2] = m_Gripper.drive_position_angles[2];
+    m_GripperAngleMessage.data[3] = m_Gripper.drive_position_angles[3];
 
     m_TurtleTwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
@@ -58,17 +63,20 @@ void N10::WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::Shar
     
 }
 
-void N10::WheelsServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
+void N10::WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lock(m_WheelsMutex);
 
     if (msg->data.size() == m_Wheels.size()) for (int i = 0; i < m_Wheels.size(); i++)
-        m_Wheels.at(i).last_angle = msg->data.at(i);
+        m_Wheels[i].last_angle = msg->data[i];
 }
 
-void N10::GripperServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
+void N10::GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lock(m_GripperMutex);
+
+    if (msg->data.size() == 4) for (int i = 0; i < 4; i++)
+        m_Gripper.feedback_angles[i] = msg->data[i];
 }
 
 void N10::EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response) 

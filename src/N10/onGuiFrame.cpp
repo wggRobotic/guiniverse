@@ -2,6 +2,8 @@
 
 #include <guiniverse/imgui_utils.hpp>
 
+#include <cmath>
+
 void N10::onGuiStart() 
 {
     
@@ -67,9 +69,6 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
             
             m_Input.drive.enable_button_physical |= input.getButton(10);
             m_Input.drive.disable_button_physical |= input.getButton(11);
-
-            m_Input.gripper.pos0_button = input.getButton(6);
-            m_Input.gripper.pos0_button = input.getButton(7);
         }
 
         bool key_w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
@@ -88,19 +87,19 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
             if (key_d) m_Input.drive.main_axis_x = -1.f;
         }
 
-        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) m_Input.gripper.forward_axis = -1.f;
-        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) m_Input.gripper.forward_axis = 1.f;
-        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) m_Input.gripper.up_axis = -1.f;
-        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) m_Input.gripper.up_axis = 1.f;
-        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) m_Input.gripper.ground_angle_axis = -1.f;
-        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) m_Input.gripper.ground_angle_axis = 1.f;
-
         float length = sqrtf(m_Input.drive.main_axis_x * m_Input.drive.main_axis_x + m_Input.drive.main_axis_y * m_Input.drive.main_axis_y);
         if (length > 1.0f) 
         {
             m_Input.drive.main_axis_x = m_Input.drive.main_axis_x / length;
             m_Input.drive.main_axis_y = m_Input.drive.main_axis_y / length;
         }
+
+        if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) m_Input.gripper.forward_axis = -1.f;
+        if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) m_Input.gripper.forward_axis = 1.f;
+        if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) m_Input.gripper.up_axis = -1.f;
+        if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) m_Input.gripper.up_axis = 1.f;
+        if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) m_Input.gripper.ground_angle_axis = -1.f;
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) m_Input.gripper.ground_angle_axis = 1.f;
         
         m_Input.drive.gas_button |= glfwGetKey(window, GLFW_KEY_SPACE);
         m_Input.drive.dog_walk_button |= glfwGetKey(window, GLFW_KEY_M);
@@ -154,21 +153,73 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
-    if (ImGui::Begin("Visualization"))
+    if (ImGui::Begin("WheelVisualization"))
     {
-        {
-            std::lock_guard<std::mutex> lock(m_WheelsMutex);
+        std::lock_guard<std::mutex> lock(m_WheelsMutex);
 
-            for(int i = 0; i < m_Wheels.size(); i++)
-            {
-                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
-                
-                imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, true);
-            }
+        for(int i = 0; i < m_Wheels.size(); i++)
+        {
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
             
-            
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, true);
         }
-        
+    }
+    ImGui::End();
+
+    if (ImGui::Begin("GripperVisualization"))
+    {
+
+        std::lock_guard<std::mutex> lock(m_GripperMutex);
+
+        ImGui::Text("x: %f   y: %f", m_Gripper.target_x, m_Gripper.target_y);
+
+        float scalar = 800.f;
+        ImVec2 offset = ImVec2(50.f, 300.f);
+
+        struct {
+            float bottom = 0.32f;
+            float top = 0.265f;
+            float height = 0.135f;
+            float gripper_top = 0.0475f;
+            float gripper_bottom = 0.04f;
+            float gripper_x = 0.018f;
+            float gripper_y = 0.05f;
+        } chassis;
+
+#define chasis_line(x_0, y_0, x_1, y_1) imgui_line(ImVec2(offset.x + (x_0) * scalar, offset.y - (y_0) * scalar), ImVec2(offset.x + (x_1) * scalar, offset.y - (y_1) * scalar), IM_COL32(150, 150, 150, 255), 3.f)
+
+        chasis_line(0.f, 0.f, 0.f, chassis.height);
+        chasis_line(0.f, 0.f, chassis.bottom, 0.f);
+        chasis_line(0.f, chassis.height, chassis.top, chassis.height);
+        chasis_line(chassis.bottom, 0.f, chassis.bottom, chassis.gripper_bottom);
+        chasis_line(chassis.top, chassis.height, chassis.top, chassis.height - chassis.gripper_top);
+        chasis_line(chassis.bottom, chassis.gripper_bottom, chassis.top, chassis.height - chassis.gripper_top);
+
+        ImVec2 joint = ImVec2(offset.x + (chassis.bottom - chassis.gripper_x) * scalar, offset.y - chassis.gripper_y * scalar);
+        float angle = m_Gripper.feedback_angles[0];
+
+        for ( int i = 0; i < 3; i++ )
+        {
+            ImVec2 next_joint = ImVec2(cos(angle) * m_Gripper.segments[i] * scalar + joint.x, -sin(angle) * m_Gripper.segments[i] * scalar + joint.y);
+
+            imgui_line(joint, next_joint, IM_COL32(200, 200, 200, 255), 3.f);
+    
+            joint = next_joint;
+            angle += m_Gripper.feedback_angles[i+1];
+        }
+
+        imgui_arrow(
+            ImVec2(
+                (m_Gripper.target_x + chassis.bottom - chassis.gripper_x) * scalar + offset.x, 
+                offset.y - (m_Gripper.target_y + chassis.gripper_y) * scalar
+            ), 
+            m_Gripper.target_ground_angle - M_PIf / 2.f, 20.f, 
+            (m_Gripper.inrange ? IM_COL32(255, 255, 255, 255) : IM_COL32(180, 50, 50, 255)), 
+            3.f, 
+            10.f, 
+            false
+        );
+    
     }
     ImGui::End();
     

@@ -38,14 +38,16 @@ public:
     void onGuiShutdown() override;
 
     void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
-    void WheelsServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
-    void GripperServoFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+    void WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+    void GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
 
     void EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response);
 
 private:
 
     void addWheel(float x, float y, float radius, bool invert);
+
+    bool calculateGripperAngles(float x, float y, float ground_angle, float* result_angles);
 
     std::shared_ptr<ImageSystem> m_ImageSystem;
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
@@ -54,6 +56,26 @@ private:
     std::vector<RoverWheel> m_Wheels;
 
     std::mutex m_GripperMutex;
+    struct
+    {
+        float segments[3] = {0.12f, 0.115f, 0.16f};
+
+        float drive_position_angles[4] = {1.4f, 1.6f, 0.2f, 0.f };
+
+        float target_x = 0.22f;
+        float target_y = 0.0f;
+        float target_ground_angle = 0.f;
+
+        float current_x = 0.22f;
+        float current_y = 0.0f;
+        float current_ground_angle = 0.f;
+        float current_gripper_state = 0.f;
+
+        float feedback_angles[4] = {0.f, 0.f, 0.f, 0.f};
+
+        bool inrange = true;
+        bool ready = false;
+    } m_Gripper;
 
     std::mutex m_InputMutex;
 
@@ -82,9 +104,6 @@ private:
             float forward_axis = 0.f;
             float ground_angle_axis = 0.f;
 
-            bool pos0_button = false;
-            bool pos1_button = false;
-
             float gripper_state = 0.5f;
             float gripper_state_joystick = 0.5f;
         } gripper;
@@ -97,14 +116,14 @@ private:
 
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsAngleFeedbackSubscriber;
-    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperFeedbackSubscriber;
+    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAngleFeedbackSubscriber;
 
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMPublisher;
     std_msgs::msg::Float32MultiArray m_WheelsRPMMessage;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsAnglePublisher;
     std_msgs::msg::Float32MultiArray m_WheelsAngleMessage;
-    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperPublisher;
-    std_msgs::msg::Float32MultiArray m_GripperMessage;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAnglePublisher;
+    std_msgs::msg::Float32MultiArray m_GripperAngleMessage;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
     geometry_msgs::msg::Twist m_TurtleTwistMessage;

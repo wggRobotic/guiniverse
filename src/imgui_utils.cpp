@@ -122,3 +122,14 @@ void imgui_arrow(ImVec2 start, float angle, float magnitude, ImU32 color, float 
         draw_list->AddText(textPos, IM_COL32(255, 255, 255, 255), label);
     }
 }
+
+void imgui_line(const ImVec2& start, const ImVec2& end, ImU32 color, float thickness) {
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    
+    ImVec2 panel_pos = ImGui::GetWindowPos();
+    
+    ImVec2 start_pos = ImVec2(panel_pos.x + start.x, panel_pos.y + start.y);
+    ImVec2 end_pos = ImVec2(panel_pos.x + end.x, panel_pos.y + end.y);
+    
+    draw_list->AddLine(start_pos, end_pos, color, thickness);
+}
