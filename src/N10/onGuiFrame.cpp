@@ -116,10 +116,18 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
 
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        pos.y += ImGui::GetStyle().ItemSpacing.y;
+
         if (ImGui::RadioButton("Drive", !m_GripperMode.load())) m_GripperMode.store(false);
         if (ImGui::RadioButton("Gripper", m_GripperMode.load())) m_GripperMode.store(true);
 
-        ImVec2 pos = ImGui::GetCursorScreenPos();
+        ImGui::Button("Enable");
+        if (ImGui::IsItemActive()) m_Input.drive.enable_button_physical = true;
+        ImGui::Button("Disable");
+        if (ImGui::IsItemActive()) m_Input.drive.disable_button_physical = true;
+
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 100.f, pos.y));
 
         ImVec2 drive_joystick_axes = ImVec2(m_Input.drive.main_axis_x, m_Input.drive.main_axis_y);
 
@@ -128,26 +136,20 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
         m_Input.drive.main_axis_x = drive_joystick_axes.x;
         m_Input.drive.main_axis_y = drive_joystick_axes.y;
 
-        ImGui::Text("Joystick %f %f", drive_joystick_axes.x, drive_joystick_axes.y);
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 320.f, pos.y));
 
-        ImGui::Button("Enable");
-        if (ImGui::IsItemActive()) m_Input.drive.enable_button_physical = true;
-        ImGui::Button("Disable");
-        if (ImGui::IsItemActive()) m_Input.drive.disable_button_physical = true;
-
-        ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
         ImGui::VSliderFloat("##drive_slider_scalar", ImVec2(20, 200), &m_Input.drive.scalar_axis, 0.0f, 1.0f, "%.2f");
 
-        ImGui::SetCursorScreenPos(ImVec2(pos.x + 300.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 400.f, pos.y));
         m_Input.gripper.forward_axis = imgui_joyslider("gripper_slider_forward", 200.f, 0.05f, (m_Input.gripper.forward_axis == 0.f ? 0 : &m_Input.gripper.forward_axis ));
 
-        ImGui::SetCursorScreenPos(ImVec2(pos.x + 350.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 450.f, pos.y));
         m_Input.gripper.up_axis = imgui_joyslider("gripper_slider_up", 200.f, 0.05f, (m_Input.gripper.up_axis == 0.f ? 0 : &m_Input.gripper.up_axis ));
 
-        ImGui::SetCursorScreenPos(ImVec2(pos.x + 400.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 500.f, pos.y));
         m_Input.gripper.ground_angle_axis = imgui_joyslider("gripper_slider_ground_angle", 200.f, 0.05f, (m_Input.gripper.ground_angle_axis == 0.f ? 0 : &m_Input.gripper.ground_angle_axis ));
 
-        ImGui::SetCursorScreenPos(ImVec2(pos.x + 450.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 550.f, pos.y));
         ImGui::VSliderFloat("##gripper_slider_gripper", ImVec2(20, 200), &m_Input.gripper.gripper_state, 0.0f, 1.0f, "%.2f");
 
     }
@@ -159,22 +161,23 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 
         for(int i = 0; i < m_Wheels.size(); i++)
         {
-            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 500.f + 150.f, -m_Wheels.at(i).x * 500.f + 200.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
             
-            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 600.f + 160.f, -m_Wheels.at(i).x * 600.f + 250.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, true);
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 500.f + 150.f, -m_Wheels.at(i).x * 500.f + 200.f), m_Wheels.at(i).last_angle, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, false);
         }
     }
     ImGui::End();
 
     if (ImGui::Begin("GripperVisualization"))
     {
-
         std::lock_guard<std::mutex> lock(m_GripperMutex);
 
-        ImGui::Text("x: %f   y: %f", m_Gripper.target_x, m_Gripper.target_y);
+        float sensor_distance = m_GripperDistanceSensorDistance.load();
+
+        ImGui::Text("target x: %fm   target y: %fm   distance_sensor: %fm", m_Gripper.target_x, m_Gripper.target_y, sensor_distance);
 
         float scalar = 800.f;
-        ImVec2 offset = ImVec2(50.f, 300.f);
+        ImVec2 offset = ImVec2(50.f, 250.f);
 
         struct {
             float bottom = 0.32f;
@@ -196,17 +199,21 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
         chasis_line(chassis.bottom, chassis.gripper_bottom, chassis.top, chassis.height - chassis.gripper_top);
 
         ImVec2 joint = ImVec2(offset.x + (chassis.bottom - chassis.gripper_x) * scalar, offset.y - chassis.gripper_y * scalar);
-        float angle = m_Gripper.feedback_angles[0];
+        float angle = 0.f;
 
         for ( int i = 0; i < 3; i++ )
         {
+            angle += m_Gripper.feedback_angles[i];
             ImVec2 next_joint = ImVec2(cos(angle) * m_Gripper.segments[i] * scalar + joint.x, -sin(angle) * m_Gripper.segments[i] * scalar + joint.y);
 
-            imgui_line(joint, next_joint, IM_COL32(200, 200, 200, 255), 3.f);
+            imgui_line(joint, next_joint, IM_COL32(200, 200, 200, 255), 4.f);
     
             joint = next_joint;
-            angle += m_Gripper.feedback_angles[i+1];
         }
+
+        ImVec2 next_joint = ImVec2(cos(angle) * sensor_distance * scalar + joint.x, -sin(angle) * sensor_distance * scalar + joint.y);
+        imgui_line(joint, next_joint, IM_COL32(255, 100, 100, 255), 2.f);
+
 
         imgui_arrow(
             ImVec2(

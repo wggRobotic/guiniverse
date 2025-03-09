@@ -2,10 +2,19 @@
 
 ## Overview
 
-This project will be a graphical user interface (GUI) for a Mars rover using ImGui. The GUI provides various tools and visualizations for controlling and monitoring the rover's operations.
+This project is a graphical user interface (GUI) for the robots we are working on currently.
+The GUI provides various tools and visualizations for controlling and monitoring the selected robots operations.
 
-## Future-Features
+## Robots
 
-- Real-time control and monitoring of the Mars rover.
-- Interactive visualization of sensor data and rover states.
-- Customizable widgets and controls using ImGui.
+# N10 (mars rover)
+
+implemented
+
+# Idefix (robo dog)
+
+comming soon
+
+# NoName (4-wheel explorer)
+
+comming soon

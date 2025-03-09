@@ -88,8 +88,8 @@ void JoystickInput::ImGuiPanel(char* label) {
             }
         }
 
-        ImGui::End();
     }
+    ImGui::End();
 
 }
 

@@ -36,6 +36,9 @@ struct ImageSystemImageProcessor
 
     bool dirty = false;
     bool init = false;
+
+    bool flip_vertically = false;
+    bool flip_horizontally = false;
 };
 
 class ImageSystem : public image_transport::ImageTransport

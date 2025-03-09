@@ -6,10 +6,12 @@ N10::N10() : RobotController("N10", "n10")
     m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
     m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
     m_GripperAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperDistanceSensorSubscriber = node->create_subscription<std_msgs::msg::Float32>("gripper/distance_sensor", 10, std::bind(&N10::GripperDistanceSensorCallback, this, std::placeholders::_1));
 
     m_WheelsRPMPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
     m_WheelsAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
     m_GripperAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/angle/cmd", 10);
+
     m_GripperAngleMessage.data.resize(4);
     m_GripperAngleMessage.data[0] = m_Gripper.drive_position_angles[0];
     m_GripperAngleMessage.data[1] = m_Gripper.drive_position_angles[1];
@@ -33,7 +35,6 @@ N10::N10() : RobotController("N10", "n10")
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystem->addTopic("front/cam/color");
-    m_ImageSystem->addTopic("rear/cam/color");
     m_ImageSystem->addTopic("gripper/cam/color");
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
@@ -77,6 +78,11 @@ void N10::GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::S
 
     if (msg->data.size() == 4) for (int i = 0; i < 4; i++)
         m_Gripper.feedback_angles[i] = msg->data[i];
+}
+
+void N10::GripperDistanceSensorCallback(const std_msgs::msg::Float32::SharedPtr msg)
+{
+    m_GripperDistanceSensorDistance.store(msg->data);
 }
 
 void N10::EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response) 

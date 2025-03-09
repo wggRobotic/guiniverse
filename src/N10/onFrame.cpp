@@ -179,7 +179,7 @@ void N10::onFrame()
                     float angular_step = 0.005f;
 
                     float diff = angles[i] - m_GripperAngleMessage.data[i];
-                    if (fabs(diff) > 0.0001) m_Gripper.ready = false;
+                    if (fabs(diff) < 0.0001) m_Gripper.ready = false;
 
                     m_GripperAngleMessage.data[i] += (fabs(diff) < angular_step ? diff : (diff > 0 ? angular_step : -angular_step));
                 }
@@ -199,7 +199,7 @@ void N10::onFrame()
 
                 float ground_angle_diff = m_Gripper.target_ground_angle - m_Gripper.current_ground_angle;
                 float new_ground_angle = m_Gripper.current_ground_angle + 
-                    (0.01f < fabs(ground_angle_diff) ? ground_angle_diff : (ground_angle_diff > 0.f ? 0.01f : -0.01f));
+                    (0.01f > fabs(ground_angle_diff) ? ground_angle_diff : (ground_angle_diff > 0.f ? 0.01f : -0.01f));
 
                 calculateGripperAngles(new_x, new_y, new_ground_angle, angles);
                 

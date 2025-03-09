@@ -7,6 +7,7 @@
 #include <atomic>
 #include <mutex>
 #include <std_msgs/msg/float32_multi_array.hpp>
+#include <std_msgs/msg/float32.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 
@@ -40,6 +41,7 @@ public:
     void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
+    void GripperDistanceSensorCallback(const std_msgs::msg::Float32::SharedPtr msg);
 
     void EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response);
 
@@ -76,6 +78,8 @@ private:
         bool inrange = true;
         bool ready = false;
     } m_Gripper;
+
+    std::atomic<float> m_GripperDistanceSensorDistance{0.f};
 
     std::mutex m_InputMutex;
 
@@ -117,6 +121,7 @@ private:
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsAngleFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAngleFeedbackSubscriber;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr m_GripperDistanceSensorSubscriber;
 
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMPublisher;
     std_msgs::msg::Float32MultiArray m_WheelsRPMMessage;

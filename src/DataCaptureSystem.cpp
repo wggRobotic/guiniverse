@@ -55,7 +55,8 @@ void DataCaptureSystem::ImGuiPanels() {
                     outputFile.close();
                 }
             }
-        } 
+        }
+        ImGui::End();
     }
-    ImGui::End();
+
 }

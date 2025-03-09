@@ -109,7 +109,10 @@ void ImageSystem::ImGuiPanels()
                 }
 
                 m_ImageProcessors.at(i).dirty = false;
-            
+
+                ImGui::Checkbox("Flip vertically", &m_ImageProcessors.at(i).flip_vertically);
+                ImGui::Checkbox("Flip horizontally", &m_ImageProcessors.at(i).flip_horizontally);
+
                 ImVec2 widget_size = ImGui::GetContentRegionAvail();
 
                 float image_aspect = (float)m_ImageProcessors.at(i).texture_width / (float)m_ImageProcessors.at(i).texture_height;
@@ -122,7 +125,9 @@ void ImageSystem::ImGuiPanels()
                 else 
                     display_size = ImVec2(widget_size.x, widget_size.x / image_aspect);
                 
-                ImGui::Image((ImTextureID)m_ImageProcessors.at(i).texture, display_size);
+                ImVec2 uv0 = ImVec2(m_ImageProcessors.at(i).flip_horizontally ? 1.f : 0.f, m_ImageProcessors.at(i).flip_vertically ? 1.f : 0.f);
+                ImVec2 uv1 = ImVec2(m_ImageProcessors.at(i).flip_horizontally ? 0.f : 1.f, m_ImageProcessors.at(i).flip_vertically ? 0.f : 1.f);
+                ImGui::Image((ImTextureID)m_ImageProcessors.at(i).texture, display_size, uv0, uv1);
             }
             else 
                 ImGui::Text("No image yet");
