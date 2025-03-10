@@ -1,6 +1,6 @@
 #pragma once
 
-#include <guiniverse/ImageSystem.hpp>
+#include <guiniverse/GSTImageSystem.hpp>
 #include <guiniverse/ControlGui/RobotController.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
@@ -51,7 +51,7 @@ private:
 
     bool calculateGripperAngles(float x, float y, float ground_angle, float* result_angles);
 
-    std::shared_ptr<ImageSystem> m_ImageSystem;
+    GSTImageSystem m_GSTImageSystem;
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 
     std::mutex m_WheelsMutex;
@@ -60,9 +60,9 @@ private:
     std::mutex m_GripperMutex;
     struct
     {
-        float segments[3] = {0.12f, 0.115f, 0.16f};
+        float segments[3] = {0.12f, 0.115f, 0.11f};
 
-        float drive_position_angles[4] = {1.4f, 1.6f, 0.2f, 0.f };
+        float drive_position_angles[4] = {1.4f, 1.4f, 0.6f, 0.f };
 
         float target_x = 0.22f;
         float target_y = 0.0f;
@@ -110,6 +110,8 @@ private:
 
             float gripper_state = 0.5f;
             float gripper_state_joystick = 0.5f;
+
+            bool send_angles = false;
         } gripper;
 
     } m_Input;

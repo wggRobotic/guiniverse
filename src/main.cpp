@@ -6,6 +6,8 @@
 #include <guiniverse/Idefix/Idefix.hpp>
 #include <guiniverse/NoName/NoName.hpp>
 
+#include <gst/gst.h>
+
 ControlGui* gui_ptr;
 
 int main(int argc, char **argv)
@@ -14,6 +16,8 @@ int main(int argc, char **argv)
     glewInit();
 
     rclcpp::init(argc, argv);
+
+    gst_init(NULL, NULL);
 
     ControlGui gui(60);
     gui_ptr = &gui;

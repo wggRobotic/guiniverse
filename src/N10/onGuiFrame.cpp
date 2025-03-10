@@ -11,7 +11,7 @@ void N10::onGuiStart()
 
 void N10::onGuiShutdown() 
 {
-    m_ImageSystem->onGuiShutdown();
+    m_GSTImageSystem.onGuiShutdown();
 }
 
 void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
@@ -127,6 +127,8 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
         ImGui::Button("Disable");
         if (ImGui::IsItemActive()) m_Input.drive.disable_button_physical = true;
 
+        ImGui::Checkbox("Gripperangles", &m_Input.gripper.send_angles);
+
         ImGui::SetCursorScreenPos(ImVec2(pos.x + 100.f, pos.y));
 
         ImVec2 drive_joystick_axes = ImVec2(m_Input.drive.main_axis_x, m_Input.drive.main_axis_y);
@@ -230,6 +232,6 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
     
-    m_ImageSystem->ImGuiPanels();
+    m_GSTImageSystem.ImGuiPanels();
     m_DataCaptureSystem->ImGuiPanels();
 }

@@ -32,13 +32,10 @@ N10::N10() : RobotController("N10", "n10")
     addWheel(-0.152f, -0.105f, 0.055f, false); //5
     
 
-    m_ImageSystem = std::make_shared<ImageSystem>(node);
-
-    m_ImageSystem->addTopic("front/cam/color");
-    m_ImageSystem->addTopic("gripper/cam/color");
+    m_GSTImageSystem.addSink(5000);
+    m_GSTImageSystem.addSink(5001);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
-
     m_DataCaptureSystem->addSection("Barcodes", "barcode");
 }
 

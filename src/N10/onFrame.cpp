@@ -18,6 +18,7 @@ void N10::onFrame()
         float forward = 0.f;
         float ground_angle = 0.f;
         float state = 0.f;
+        bool send_angles = false; 
     } gripper_input;
 
     {
@@ -26,14 +27,14 @@ void N10::onFrame()
         drive_input.gas = m_Input.drive.gas_button;
 
         if (m_Input.drive.dog_walk_button) {
-            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis;
-            drive_input.lin_y = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis;
+            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.8f;
+            drive_input.lin_y = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * 0.8f;
             drive_input.ang = 0.f;
         }
         else {
-            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.4f;
+            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.8f;
             drive_input.lin_y = 0.f;
-            drive_input.ang = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * (m_Input.drive.main_axis_y * m_Input.drive.scalar_axis < 0 ? -1.f : 1.f);
+            drive_input.ang = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * 2.f * (m_Input.drive.main_axis_y * m_Input.drive.scalar_axis < 0 ? -1.f : 1.f);
         }
 
         if (m_Input.drive.enable_button_physical)
@@ -63,6 +64,7 @@ void N10::onFrame()
         gripper_input.forward = m_Input.gripper.forward_axis;
         gripper_input.ground_angle = m_Input.gripper.ground_angle_axis;
         gripper_input.state = m_Input.gripper.gripper_state;
+        gripper_input.send_angles = m_Input.gripper.send_angles;
     }
 
     {
@@ -179,7 +181,7 @@ void N10::onFrame()
                     float angular_step = 0.005f;
 
                     float diff = angles[i] - m_GripperAngleMessage.data[i];
-                    if (fabs(diff) < 0.0001) m_Gripper.ready = false;
+                    if (fabs(diff) > 0.0001) m_Gripper.ready = false;
 
                     m_GripperAngleMessage.data[i] += (fabs(diff) < angular_step ? diff : (diff > 0 ? angular_step : -angular_step));
                 }
@@ -216,7 +218,7 @@ void N10::onFrame()
         }
 
     }
-    m_GripperAnglePublisher->publish(m_GripperAngleMessage);
+    if (gripper_input.send_angles) m_GripperAnglePublisher->publish(m_GripperAngleMessage);
 
 }
 
