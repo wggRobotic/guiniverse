@@ -3,7 +3,7 @@
 #include <thread>
 
 ControlGui::ControlGui(int RobotControllerRefreshRate) : m_RosRate(RobotControllerRefreshRate) {
-    //m_Console.Init();
+    m_Console.Init();
 }
 
 void ControlGui::addController(std::shared_ptr<RobotController> Controller)

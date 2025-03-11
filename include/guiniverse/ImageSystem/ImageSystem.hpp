@@ -1,32 +1,16 @@
 #pragma once
 
-#include <guiniverse/ImageSystem/ImageSystemBackend.hpp>
-
 #include <vector>
 #include <mutex>
 #include <memory>
 
-
-static int ImageSystemImageLayoutPixelSize(int image_layout)
-{
-    switch (image_layout)
-    {
-    case GL_RGB:
-        return 3;
-    case GL_BGR:
-        return 3;
-    
-    default:
-        return 4;
-    }
-}
+#include <GL/gl.h>
 
 struct ImageSystemImageProcessor
 {
-    std::unique_ptr<std::mutex> mutex;
+    std::unique_ptr<std::mutex> mutex = std::make_unique<std::mutex>();
 
-    int backend_index;
-    int backend_processor_index;
+    std::string imgui_panel_name = "none";
 
     struct
     {
@@ -54,18 +38,25 @@ class ImageSystem
 
 public:
 
-    void addImageSystemBackend(ImageSystemBackend* backend);
-
-    void onFrame();
-
     void onGuiStartup();
-
     void onGuiFrame();
-
     void onGuiShutdown();
+
+    int addImageProcessor(const std::string& imgui_panel_name);
+    void ImageCallback(int index, int image_layout, int width, int height, unsigned char* data);
 
 private:
 
     std::vector<ImageSystemImageProcessor> m_ImageProcessors;
-    std::vector<ImageSystemBackend*> m_Backends;
+};
+
+class ImageSystemBackend
+{
+
+public:
+    ImageSystemBackend(std::shared_ptr<ImageSystem> image_system) : m_ImageSystem(image_system) {};
+
+protected:
+    std::shared_ptr<ImageSystem> m_ImageSystem;
+
 };

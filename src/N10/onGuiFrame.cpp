@@ -6,12 +6,12 @@
 
 void N10::onGuiStartup() 
 {
-    m_ImageSystem.onGuiStartup();
+    m_ImageSystem->onGuiStartup();
 }
 
 void N10::onGuiShutdown()
 {
-    m_ImageSystem.onGuiShutdown();
+    m_ImageSystem->onGuiShutdown();
 }
 
 void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
@@ -232,6 +232,6 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
     
-    m_ImageSystem.onGuiFrame();
+    m_ImageSystem->onGuiFrame();
     m_DataCaptureSystem->ImGuiPanels();
 }

@@ -11,52 +11,43 @@
         } \
     } while (0)
 
-void ImageSystem::addImageSystemBackend(ImageSystemBackend* backend)
+int ImageSystemImageLayoutPixelSize(int image_layout)
 {
-    int backends_size = m_Backends.size();
-    m_Backends.resize(backends_size + 1);
-    m_Backends[backends_size] = backend;
-
-    int processors_size = m_ImageProcessors.size();
-    int backend_processor_count = backend->getProcessorCount();
-    m_ImageProcessors.resize(processors_size + backend_processor_count);
-
-    for (int i = 0; i < backend_processor_count; i++)
+    switch (image_layout)
     {
-        m_ImageProcessors[i + processors_size].backend_index = backends_size;
-        m_ImageProcessors[i + processors_size].backend_processor_index = i;
-        m_ImageProcessors[i + processors_size].mutex = std::make_unique<std::mutex>();
-    }
+    case GL_RGB:
+        return 3;
+    case GL_BGR:
+        return 3;
+    case GL_R:
+        return 1;
+    case GL_RGBA:
+        return 4;
 
+    default:
+        return 1;
+    }
 }
 
-void ImageSystem::onFrame()
+int ImageSystem::addImageProcessor(const std::string& imgui_panel_name)
 {
+    int size = m_ImageProcessors.size();
+    m_ImageProcessors.resize(size + 1);
+    m_ImageProcessors[size].imgui_panel_name = imgui_panel_name;
 
-    for (int i = 0; i < m_Backends.size(); i++)
-        m_Backends[i]->onFrame();
+    return size;
+}
 
-    for (int i = 0; i < m_ImageProcessors.size(); i++)
-    {
-        std::lock_guard<std::mutex> lock(*m_ImageProcessors[i].mutex);
+void ImageSystem::ImageCallback(int index, int image_layout, int width, int height, unsigned char* data)
+{
+    std::lock_guard<std::mutex> lock(*m_ImageProcessors[index].mutex);
 
-        int image_layout = GL_RGB;
-        int width = 0;
-        int height = 0;
-        unsigned char* data;
-
-        if (m_Backends[m_ImageProcessors[i].backend_index]->onFramegetImage(m_ImageProcessors[i].backend_processor_index, &image_layout, &width, &height, &data))
-        {
-            m_ImageProcessors[i].image.dirty = true;
-            m_ImageProcessors[i].image.holds = true;
-            m_ImageProcessors[i].image.width = width;
-            m_ImageProcessors[i].image.height = height;
-            m_ImageProcessors[i].image.image_layout = image_layout;
-            m_ImageProcessors[i].image.data.assign(data, data + ImageSystemImageLayoutPixelSize(image_layout) * width * height);
-
-            m_Backends[m_ImageProcessors[i].backend_index]->onFramegotImage(m_ImageProcessors[i].backend_processor_index);
-        }        
-    }
+    m_ImageProcessors[index].image.dirty = true;
+    m_ImageProcessors[index].image.holds = true;
+    m_ImageProcessors[index].image.width = width;
+    m_ImageProcessors[index].image.height = height;
+    m_ImageProcessors[index].image.image_layout = image_layout;
+    m_ImageProcessors[index].image.data.assign(data, data + ImageSystemImageLayoutPixelSize(image_layout) * width * height);
 }
 
 void ImageSystem::onGuiStartup()
@@ -115,7 +106,7 @@ void ImageSystem::onGuiFrame()
             GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
         }
 
-        if (ImGui::Begin(m_Backends[m_ImageProcessors[i].backend_index]->ImGuiPanelName(m_ImageProcessors[i].backend_processor_index).c_str()))
+        if (ImGui::Begin(m_ImageProcessors[i].imgui_panel_name.c_str()))
         {
             if (m_ImageProcessors[i].image.holds)
             {

@@ -5,7 +5,7 @@ void N10::onFrame()
 
     rclcpp::spin_some(node);
 
-    m_ImageSystem.onFrame();
+    m_ImageSystemBackendGST->onFrame();
 
     struct 
     {

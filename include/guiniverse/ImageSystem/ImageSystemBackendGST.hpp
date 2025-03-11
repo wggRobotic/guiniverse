@@ -1,6 +1,6 @@
 #pragma once
 
-#include <guiniverse/ImageSystem/ImageSystemBackend.hpp>
+#include <guiniverse/ImageSystem/ImageSystem.hpp>
 
 #include <vector>
 
@@ -9,6 +9,8 @@
 
 struct ImageSystemBackendGSTProcessor
 {
+    int index;
+
     short port;
     
     GstElement *pipeline;
@@ -16,29 +18,18 @@ struct ImageSystemBackendGSTProcessor
     GstAppSink *sink;
 
     GstClockTime last_frame_timestamp;
-
-    //Frame
-    GstSample* sample;
-    GstBuffer* buffer;
-    GstMapInfo map;
-
 };
 
 
 class ImageSystemBackendGST : public ImageSystemBackend
 {
 public:
-    ImageSystemBackendGST();
+    ImageSystemBackendGST(std::shared_ptr<ImageSystem> image_system);
 
     ~ImageSystemBackendGST();
-
-    int getProcessorCount() override;
-    std::string ImGuiPanelName(int index) override;
     
-    void onFrame() override;
-    bool onFramegetImage(int index, int* image_layout, int* width, int* height, unsigned char** data) override;
-    void onFramegotImage(int index) override;
-
+    void onFrame();
+    
     void addSink(short port);
 
 private:

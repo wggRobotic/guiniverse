@@ -1,7 +1,8 @@
 #pragma once
 
-#include <guiniverse/ImageSystem/ImageSystem.hpp>
 #include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
+#include <guiniverse/ImageSystem/ImageSystemBackendROS.hpp>
+
 #include <guiniverse/ControlGui/RobotController.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
@@ -52,8 +53,8 @@ private:
 
     bool calculateGripperAngles(float x, float y, float ground_angle, float* result_angles);
 
-    ImageSystem m_ImageSystem;
-    ImageSystemBackendGST m_ImageSystemBackendGST;
+    std::shared_ptr<ImageSystem> m_ImageSystem;
+    std::shared_ptr<ImageSystemBackendGST> m_ImageSystemBackendGST;
 
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 
