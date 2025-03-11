@@ -2,6 +2,11 @@
 
 void N10::onFrame()
 {
+
+    rclcpp::spin_some(node);
+
+    m_ImageSystem.onFrame();
+
     struct 
     {
         float lin_x = 0.f;
@@ -220,6 +225,7 @@ void N10::onFrame()
     }
     if (gripper_input.send_angles) m_GripperAnglePublisher->publish(m_GripperAngleMessage);
 
+    rclcpp::spin_some(node);
 }
 
 bool N10::calculateGripperAngles(float x, float y, float ground_angle, float* result_angles)

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <guiniverse/GSTImageSystem.hpp>
+#include <guiniverse/ImageSystem/ImageSystem.hpp>
+#include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
 #include <guiniverse/ControlGui/RobotController.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
@@ -35,7 +36,7 @@ public:
     void onFrame() override;
 
     void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
-    void onGuiStart() override;
+    void onGuiStartup() override;
     void onGuiShutdown() override;
 
     void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
@@ -51,7 +52,9 @@ private:
 
     bool calculateGripperAngles(float x, float y, float ground_angle, float* result_angles);
 
-    GSTImageSystem m_GSTImageSystem;
+    ImageSystem m_ImageSystem;
+    ImageSystemBackendGST m_ImageSystemBackendGST;
+
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 
     std::mutex m_WheelsMutex;

@@ -19,10 +19,9 @@ public:
     virtual void onFrame() = 0;
     
     virtual void onGuiFrame(GLFWwindow* window, JoystickInput& input) = 0;
-    virtual void onGuiStart() = 0;
+    virtual void onGuiStartup() = 0;
     virtual void onGuiShutdown() = 0;
 
-    void spin_some() {rclcpp::spin_some(node);};
     const char* getRobotName() {return m_RobotName.c_str();};
 
 protected:

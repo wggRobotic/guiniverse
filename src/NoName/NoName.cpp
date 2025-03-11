@@ -7,11 +7,6 @@ NoName::NoName() : RobotController("NoName", "noname")
 
     m_SetModeClient = node->create_client<edu_robot::srv::SetMode>("set_mode");
 
-    m_ImageSystem = std::make_shared<ImageSystem>(node);
-
-    m_ImageSystem->addTopic("front/color");
-    m_ImageSystem->addTopic("rear/color");
-
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
 
     m_DataCaptureSystem->addSection("Barcodes", "barcode");

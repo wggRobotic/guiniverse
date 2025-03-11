@@ -4,14 +4,14 @@
 
 #include <cmath>
 
-void N10::onGuiStart() 
+void N10::onGuiStartup() 
 {
-    
+    m_ImageSystem.onGuiStartup();
 }
 
-void N10::onGuiShutdown() 
+void N10::onGuiShutdown()
 {
-    m_GSTImageSystem.onGuiShutdown();
+    m_ImageSystem.onGuiShutdown();
 }
 
 void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
@@ -232,6 +232,6 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
     
-    m_GSTImageSystem.ImGuiPanels();
+    m_ImageSystem.onGuiFrame();
     m_DataCaptureSystem->ImGuiPanels();
 }

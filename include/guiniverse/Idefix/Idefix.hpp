@@ -1,6 +1,5 @@
 #pragma once
 
-#include <guiniverse/ImageSystem.hpp>
 #include <guiniverse/ControlGui/RobotController.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
@@ -18,12 +17,11 @@ public:
     void onFrame() override;
 
     void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
-    void onGuiStart() override;
+    void onGuiStartup() override;
     void onGuiShutdown() override;
 
 private:
 
-    std::shared_ptr<ImageSystem> m_ImageSystem;
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 
     std::mutex m_InputMutex;

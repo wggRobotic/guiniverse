@@ -2,14 +2,13 @@
 
 #include <guiniverse/imgui_utils.hpp>
 
-void NoName::onGuiStart()
+void NoName::onGuiStartup()
 {
 
 }
 
 void NoName::onGuiShutdown()
 {
-    m_ImageSystem->onGuiShutdown();
 }
 
 void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
@@ -79,6 +78,5 @@ void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
-    m_ImageSystem->ImGuiPanels();
     m_DataCaptureSystem->ImGuiPanels();
 }

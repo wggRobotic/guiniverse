@@ -31,7 +31,7 @@ void ControlGui::GuiFunction() {
     bool show_styles = false;
 
     for (int i = 0; i < m_Controllers.size(); i++)
-        m_Controllers.at(i)->onGuiStart();
+        m_Controllers.at(i)->onGuiStartup();
 
 
     while (!glfwWindowShouldClose(window) && m_Running.load())

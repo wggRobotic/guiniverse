@@ -2,14 +2,13 @@
 
 #include <guiniverse/imgui_utils.hpp>
 
-void Idefix::onGuiStart()
+void Idefix::onGuiStartup()
 {
 
 }
 
 void Idefix::onGuiShutdown()
 {
-    m_ImageSystem->onGuiShutdown();
 }
 
 void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
@@ -64,6 +63,5 @@ void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
-    m_ImageSystem->ImGuiPanels();
     m_DataCaptureSystem->ImGuiPanels();
 }
