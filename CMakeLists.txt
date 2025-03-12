@@ -34,7 +34,6 @@ include_directories(
   ${GST_APP_INCLUDE_DIRS}
 )
 
-# Add GLFW
 add_subdirectory(lib/glfw)
 
 # Add ImGui
@@ -48,8 +47,17 @@ add_library(imgui STATIC
   lib/imgui/backends/imgui_impl_glfw.cpp
 )
 
+add_library(quirc STATIC
+  lib/quirc/lib/decode.c
+  lib/quirc/lib/identify.c
+  lib/quirc/lib/quirc.c
+  lib/quirc/lib/version_db.c
+)
+
 # Include directories for ImGui
 target_include_directories(imgui PUBLIC lib/imgui)
+
+include_directories(lib/quirc/lib)
 
 # Link OpenGL and GLFW libraries with ImGui
 target_link_libraries(imgui
@@ -87,6 +95,7 @@ target_link_libraries(main
   imgui
   ${GST_LIBRARIES}
   ${GST_APP_LIBRARIES}
+  quirc
 )
 
 # Install target

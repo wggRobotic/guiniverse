@@ -5,6 +5,6 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "lib/zxing"]
-	path = lib/zxing
-	url = https://github.com/zxing-cpp/zxing-cpp.git
+[submodule "lib/quirc"]
+	path = lib/quirc
+	url = https://github.com/dlbeer/quirc.git

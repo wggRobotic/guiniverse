@@ -29,11 +29,17 @@ int ImageSystemImageLayoutPixelSize(int image_layout)
     }
 }
 
-int ImageSystem::addImageProcessor(const std::string& imgui_panel_name)
+ImageSystem::ImageSystem(rclcpp::Node::SharedPtr node) : m_Node(node) 
+{
+    m_QRCodePublisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
+}
+
+int ImageSystem::addImageProcessor(int extras, const std::string& imgui_panel_name)
 {
     int size = m_ImageProcessors.size();
     m_ImageProcessors.resize(size + 1);
     m_ImageProcessors[size].imgui_panel_name = imgui_panel_name;
+    m_ImageProcessors[size].extras = extras;
 
     return size;
 }
@@ -48,10 +54,26 @@ void ImageSystem::ImageCallback(int index, int image_layout, int width, int heig
     m_ImageProcessors[index].image.height = height;
     m_ImageProcessors[index].image.image_layout = image_layout;
     m_ImageProcessors[index].image.data.assign(data, data + ImageSystemImageLayoutPixelSize(image_layout) * width * height);
+
+    if ((m_ImageProcessors[index].extras & ImageSystemExtra_QRCodeDecoder) && m_QRCodeDecoder.isReady())
+    {
+        std::vector<std::string> results;
+        m_QRCodeDecoder.getLastResult(results);
+
+        for (int i = 0; i < results.size(); i++)
+        {
+            m_QRCodeMessae.data = results[i];
+            m_QRCodePublisher->publish(m_QRCodeMessae);
+        }
+
+        m_QRCodeDecoder.startDecoding(width, height, data, image_layout);
+    }
 }
 
 void ImageSystem::onGuiStartup()
 {
+    m_QRCodeDecoder.start();
+
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
         std::lock_guard<std::mutex> lock(*m_ImageProcessors[i].mutex);
@@ -70,6 +92,8 @@ void ImageSystem::onGuiStartup()
 
 void ImageSystem::onGuiShutdown()
 {
+    m_QRCodeDecoder.stop();
+
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
         std::lock_guard<std::mutex> lock(*m_ImageProcessors[i].mutex);
