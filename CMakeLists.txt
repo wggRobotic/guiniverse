@@ -12,6 +12,7 @@ endif()
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(OpenCV REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
@@ -32,7 +33,9 @@ pkg_check_modules(GST_APP REQUIRED gstreamer-app-1.0)
 include_directories(
   ${GST_INCLUDE_DIRS}
   ${GST_APP_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
+
 
 add_subdirectory(lib/glfw)
 
@@ -96,6 +99,7 @@ target_link_libraries(main
   ${GST_LIBRARIES}
   ${GST_APP_LIBRARIES}
   quirc
+  ${OpenCV_LIBS}
 )
 
 # Install target

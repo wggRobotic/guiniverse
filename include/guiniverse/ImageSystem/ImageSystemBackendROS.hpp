@@ -22,7 +22,7 @@ public:
 
     ~ImageSystemBackendROS();
 
-    void addSubscriber(const std::string& topic_name, int extras);
+    void addSubscriber(const std::string& topic_name, int addons);
 
 private:
     std::vector<ImageSystemBackendROSProcessor> m_Processors;

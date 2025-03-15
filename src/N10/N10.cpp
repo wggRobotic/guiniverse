@@ -2,7 +2,6 @@
 
 N10::N10() : RobotController("N10", "n10")
 {
-
     m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
     m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
     m_GripperAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
@@ -34,11 +33,15 @@ N10::N10() : RobotController("N10", "n10")
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(5000, ImageSystemExtra_QRCodeDecoder );
-    m_ImageSystemBackendGST->addSink(5001, ImageSystemExtra_QRCodeDecoder);
+    m_ImageSystemBackendGST->addSink(5000, ImageSystemAddOn_QRCode);
+    m_ImageSystemBackendGST->addSink(5001, ImageSystemAddOn_QRCode);
+
+    // m_ImageSystemBackendROS = std::make_shared<ImageSystemBackendROS>(m_ImageSystem, node);
+    // m_ImageSystemBackendROS->addSubscriber("/n10/gripper/cam/color", ImageSystemAddOn_QRCode);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");
+    m_DataCaptureSystem->addSection("HazardSings", "hazard_signs");
 }
 
 N10::~N10()

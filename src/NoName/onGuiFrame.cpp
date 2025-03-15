@@ -78,5 +78,18 @@ void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
+    if (ImGui::Begin("WheelVisualization"))
+    {
+        std::lock_guard<std::mutex> lock(m_WheelsMutex);
+
+        for(int i = 0; i < m_Wheels.size(); i++)
+        {
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 500.f + 150.f, -m_Wheels.at(i).x * 500.f + 200.f), 0.f, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);
+            
+            imgui_arrow(ImVec2(-m_Wheels.at(i).y * 500.f + 150.f, -m_Wheels.at(i).x * 500.f + 200.f), 0.f, m_Wheels.at(i).last_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(255, 255, 255, 255), 5.f, 10.f, false);
+        }
+    }
+    ImGui::End();
+
     m_DataCaptureSystem->ImGuiPanels();
 }

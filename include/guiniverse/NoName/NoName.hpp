@@ -5,9 +5,21 @@
 
 #include <atomic>
 #include <mutex>
+#include <vector>
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include "edu_robot/srv/set_mode.hpp"
 #include <geometry_msgs/msg/twist.hpp>
+
+struct ExplorerWheel
+{
+    float x = 0.f;
+    float y = 0.f;
+    float radius = 0.f;
+    bool invert = false;
+
+    float target_rpm = 0.f;
+    float last_rpm = 0.f;
+};
 
 class NoName : public RobotController
 {
@@ -25,7 +37,12 @@ public:
 
 private:
 
+    void addWheel(float x, float y, float radius, bool invert);
+
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
+
+    std::mutex m_WheelsMutex;
+    std::vector<ExplorerWheel> m_Wheels;
 
     std::mutex m_InputMutex;
 
@@ -44,8 +61,8 @@ private:
     
     //ros2
 
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TwistPublisher;
-    geometry_msgs::msg::Twist m_TwistMessage;
+    rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_RPMPublisher;
+    std_msgs::msg::Float32MultiArray m_RPMMessage;
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
     geometry_msgs::msg::Twist m_TurtleTwistMessage;

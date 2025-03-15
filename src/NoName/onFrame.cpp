@@ -3,7 +3,6 @@
 void NoName::onFrame()
 {
     float lin_x = 0.f;
-    float lin_y = 0.f;
     float ang = 0.f;
     bool gas = false;
 
@@ -16,7 +15,6 @@ void NoName::onFrame()
         gas = m_Input.gas_button;
 
         lin_x = m_Input.main_axes.y * m_Input.scalar;
-        lin_y = 0.f;
         ang = m_Input.main_axes.x * m_Input.scalar * (m_Input.main_axes.y * m_Input.scalar < 0 ? -1.f : 1.f) * 2.f;
 
         if (m_Input.enable_button_physical)
@@ -44,17 +42,23 @@ void NoName::onFrame()
 
     {
         m_TurtleTwistMessage.linear.x = (gas ? lin_x : 0.f);
-        m_TurtleTwistMessage.linear.y = (gas ? lin_y : 0.f);
+        m_TurtleTwistMessage.linear.y = 0.f;
         m_TurtleTwistMessage.angular.z = (gas ? ang : 0.f);
     }
     m_TurtleTwistPublisher->publish(m_TurtleTwistMessage);
 
     {
-        m_TwistMessage.linear.x = (gas ? lin_x : 0.f);
-        m_TwistMessage.linear.y = (gas ? lin_y : 0.f);
-        m_TwistMessage.angular.z = (gas ? ang : 0.f);
+        std::lock_guard<std::mutex> lock(m_WheelsMutex);
+    
+        m_RPMMessage.data.resize(m_Wheels.size());
+
+        for(int i = 0; i < m_Wheels.size(); i++)
+        {
+            m_Wheels[i].target_rpm = 60.f * (lin_x - m_Wheels[i].y * ang) / (2.f * m_Wheels[i].radius * M_PI) * (m_Wheels[i].invert ? -1.f : 1.f);
+            m_RPMMessage.data[i] = m_Wheels[i].target_rpm;
+        }
     }
-    m_TwistPublisher->publish(m_TwistMessage);
+    m_RPMPublisher->publish(m_RPMMessage);
 
     if (!m_SetModeClientWaiting && set_mode_service)
     {

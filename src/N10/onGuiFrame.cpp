@@ -40,32 +40,17 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
             if (input.getButton(8)) m_GripperMode.store(false);
             else if (input.getButton(9)) m_GripperMode.store(true);
 
-            if (!m_GripperMode.load())
-            {
-                m_Input.drive.main_axis_x = input.getAxis(0);
-                m_Input.drive.main_axis_y = input.getAxis(1);
+            m_Input.drive.main_axis_x = input.getAxis(0);
+            m_Input.drive.main_axis_y = input.getAxis(1);
 
-                float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
-                if (new_joystick_scalar != m_Input.drive.scalar_axis_joystick) {
-                    m_Input.drive.scalar_axis_joystick = new_joystick_scalar;
-                    m_Input.drive.scalar_axis = new_joystick_scalar;
-                }
-
-                m_Input.drive.gas_button |= input.getButton(0);
-                m_Input.drive.dog_walk_button |= input.getButton(1);
+            float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
+            if (new_joystick_scalar != m_Input.drive.scalar_axis_joystick) {
+                m_Input.drive.scalar_axis_joystick = new_joystick_scalar;
+                m_Input.drive.scalar_axis = new_joystick_scalar;
             }
-            else
-            {
-                m_Input.gripper.forward_axis = input.getAxis(1);
-                m_Input.gripper.up_axis = input.getAxis(5);
-                m_Input.gripper.ground_angle_axis = (input.getButton(7) == GLFW_PRESS ? 1.f : (input.getButton(8) == GLFW_PRESS ? -1.f : 0.f));
 
-                float new_gripper_state_joystick = input.getAxis(3) / 2.f + 0.5f;
-                if (new_gripper_state_joystick != m_Input.gripper.gripper_state_joystick) {
-                    m_Input.gripper.gripper_state_joystick = new_gripper_state_joystick;
-                    m_Input.gripper.gripper_state = new_gripper_state_joystick;
-                }
-            }
+            m_Input.drive.gas_button |= input.getButton(0);
+            m_Input.drive.dog_walk_button |= input.getButton(1);
             
             m_Input.drive.enable_button_physical |= input.getButton(10);
             m_Input.drive.disable_button_physical |= input.getButton(11);
