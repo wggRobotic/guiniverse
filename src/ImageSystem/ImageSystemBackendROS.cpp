@@ -12,14 +12,7 @@ ImageSystemBackendROS::~ImageSystemBackendROS()
 }
 
 #define MAKE_CALLBACK(INDEX) [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr &msg) {\
-\
-    int image_layout = GL_RGB;\
-\
-    if (msg->encoding == "mono8") image_layout = GL_R;\
-    else if (msg->encoding == "bgr8") image_layout = GL_BGR;\
-    else if (msg->encoding == "rgba8") image_layout = GL_RGBA;\
-\
-    m_ImageSystem->ImageCallback(m_Processors[INDEX].index, image_layout, msg->width, msg->height, (unsigned char*) msg->data.data());\
+    m_ImageSystem->ImageCallback(m_Processors[INDEX].index, true, msg->width, msg->height, (unsigned char*) msg->data.data());\
 }\
 
 

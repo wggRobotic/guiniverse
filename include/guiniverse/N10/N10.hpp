@@ -9,6 +9,7 @@
 #include <atomic>
 #include <mutex>
 #include <std_msgs/msg/float32_multi_array.hpp>
+#include <std_msgs/msg/byte_multi_array.hpp>
 #include <std_msgs/msg/float32.hpp>
 #include <geometry_msgs/msg/twist.hpp>
 #include <std_srvs/srv/set_bool.hpp>
@@ -35,6 +36,8 @@ public:
     ~N10();
 
     void onFrame() override;
+    void onStartup() override;
+    void onShutdown() override;
 
     void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
     void onGuiStartup() override;
@@ -44,6 +47,10 @@ public:
     void WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
     void GripperDistanceSensorCallback(const std_msgs::msg::Float32::SharedPtr msg);
+
+    void VoltagePowerManagementCallback(const std_msgs::msg::Float32::SharedPtr msg);
+    void VoltageAdatpterCallback(const std_msgs::msg::Float32::SharedPtr msg);
+    void WheelsEnabledCallback(const std_msgs::msg::ByteMultiArray::SharedPtr msg);
 
     void EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response);
 
@@ -85,6 +92,9 @@ private:
     } m_Gripper;
 
     std::atomic<float> m_GripperDistanceSensorDistance{0.f};
+    std::atomic<float> m_VoltagePowerManagement{0.f};
+    std::atomic<float> m_VoltageAdapter{0.f};
+    std::atomic<bool> m_Enabled{false};
 
     std::mutex m_InputMutex;
 
@@ -129,6 +139,11 @@ private:
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsAngleFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAngleFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr m_GripperDistanceSensorSubscriber;
+
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr m_VoltagePowerManagementSubscriber;
+    rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr m_VoltageAdapterSubscriber;
+    rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr m_WheelsEnabledSubscriber;
+
 
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMPublisher;
     std_msgs::msg::Float32MultiArray m_WheelsRPMMessage;

@@ -31,7 +31,7 @@ struct ImageSystemImageProcessor
         bool dirty = false;
         int width = 0;
         int height = 0;
-        int image_layout;
+        bool is_bgr;
         std::vector<unsigned char> data;
     } image;   
 
@@ -77,7 +77,7 @@ public:
     void onGuiShutdown();
 
     int addImageProcessor(int addons, const std::string& imgui_panel_name);
-    void ImageCallback(int index, int image_layout, int width, int height, unsigned char* data);
+    void ImageCallback(int index, bool is_bgr, int width, int height, unsigned char* data);
 
 private:
 

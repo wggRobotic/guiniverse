@@ -11,24 +11,6 @@
         } \
     } while (0)
 
-int ImageSystemImageLayoutPixelSize(int image_layout)
-{
-    switch (image_layout)
-    {
-    case GL_RGB:
-        return 3;
-    case GL_BGR:
-        return 3;
-    case GL_R:
-        return 1;
-    case GL_RGBA:
-        return 4;
-
-    default:
-        return 1;
-    }
-}
-
 ImageSystem::ImageSystem(rclcpp::Node::SharedPtr node) : m_Node(node) 
 {
     m_ImageProcessors.reserve(3);
@@ -79,7 +61,6 @@ void ImageSystem::AddOnThreadFunction(int index)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
-
         //qrcode
         int width, height;
         {
@@ -91,44 +72,25 @@ void ImageSystem::AddOnThreadFunction(int index)
 
             m_ImageProcessors[index]->qrcode_addon.gray_scale.reserve(width * height);
 
-            switch (m_ImageProcessors[index]->image.image_layout)
+            if (m_ImageProcessors[index]->image.is_bgr) 
             {
-            case GL_RGB: for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
-                m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                    0.299f * (float)data[offset + 0] + 
-                    0.587f * (float)data[offset + 1] + 
-                    0.114f * (float)data[offset + 2]
-                );
-            } break;
-
-            case GL_BGR: for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
-                m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                    0.299f * (float)data[offset + 2] + 
-                    0.587f * (float)data[offset + 1] + 
-                    0.114f * (float)data[offset + 0]
-                );
-            } break;
-
-            case GL_R: for (int i = 0, offset = 0; i < width * height; i++, offset+=1) {
-                m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                    0.299f * (float)data[offset + 0]
-                );
-            } break;
-
-            case GL_RGBA: for (int i = 0, offset = 0; i < width * height; i++, offset+=4) {
-                m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                    0.299f * (float)data[offset + 0] + 
-                    0.587f * (float)data[offset + 1] + 
-                    0.114f * (float)data[offset + 2]
-                );
-            } break;
-
-            default: for (int i = 0, offset = 0; i < width * height; i++, offset+=1) {
-                m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                    0.299f * (float)data[offset + 0]
-                );
-            } break;
-
+                for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
+                    m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
+                        0.299f * (float)data[offset + 2] + 
+                        0.587f * (float)data[offset + 1] + 
+                        0.114f * (float)data[offset + 0]
+                    );
+                }
+            }
+            else
+            {
+                for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
+                    m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
+                        0.299f * (float)data[offset + 0] + 
+                        0.587f * (float)data[offset + 1] + 
+                        0.114f * (float)data[offset + 2]
+                    );
+                }
             }
         }
 
@@ -156,7 +118,7 @@ void ImageSystem::AddOnThreadFunction(int index)
     }
 }
 
-void ImageSystem::ImageCallback(int index, int image_layout, int width, int height, unsigned char* data)
+void ImageSystem::ImageCallback(int index, bool is_bgr, int width, int height, unsigned char* data)
 {
     std::lock_guard<std::mutex> lock(m_ImageProcessors[index]->image_mutex);
 
@@ -164,8 +126,8 @@ void ImageSystem::ImageCallback(int index, int image_layout, int width, int heig
     m_ImageProcessors[index]->image.holds = true;
     m_ImageProcessors[index]->image.width = width;
     m_ImageProcessors[index]->image.height = height;
-    m_ImageProcessors[index]->image.image_layout = image_layout;
-    m_ImageProcessors[index]->image.data.assign(data, data + ImageSystemImageLayoutPixelSize(image_layout) * width * height);
+    m_ImageProcessors[index]->image.is_bgr = is_bgr;
+    m_ImageProcessors[index]->image.data.assign(data, data + 3 * width * height);
 }
 
 void ImageSystem::onGuiStartup()
@@ -194,6 +156,8 @@ void ImageSystem::onGuiShutdown()
         std::lock_guard<std::mutex> lock(m_ImageProcessors[i]->image_mutex);
 
         GLCALL(glDeleteTextures(1, &m_ImageProcessors[i]->texture.gl_texture));
+        m_ImageProcessors[i]->texture.height = 0;
+        m_ImageProcessors[i]->texture.width = 0;
     }
 }
 
@@ -215,11 +179,11 @@ void ImageSystem::onGuiFrame()
                 m_ImageProcessors[i]->texture.width = m_ImageProcessors[i]->image.width;
                 m_ImageProcessors[i]->texture.height = m_ImageProcessors[i]->image.height;
 
-                GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_ImageProcessors[i]->texture.width, m_ImageProcessors[i]->texture.height, 0, m_ImageProcessors[i]->image.image_layout, GL_UNSIGNED_BYTE, m_ImageProcessors[i]->image.data.data()));                
+                GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_ImageProcessors[i]->texture.width, m_ImageProcessors[i]->texture.height, 0, m_ImageProcessors[i]->image.is_bgr ? GL_BGR : GL_RGB, GL_UNSIGNED_BYTE, m_ImageProcessors[i]->image.data.data()));                
             }
             else
             {
-                GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_ImageProcessors[i]->texture.width, m_ImageProcessors[i]->texture.height, m_ImageProcessors[i]->image.image_layout, GL_UNSIGNED_BYTE, m_ImageProcessors[i]->image.data.data()));
+                GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_ImageProcessors[i]->texture.width, m_ImageProcessors[i]->texture.height, m_ImageProcessors[i]->image.is_bgr ? GL_BGR : GL_RGB, GL_UNSIGNED_BYTE, m_ImageProcessors[i]->image.data.data()));
             }
         
             GLCALL(glBindTexture(GL_TEXTURE_2D, 0));

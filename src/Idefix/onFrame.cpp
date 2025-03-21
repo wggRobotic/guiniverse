@@ -1,5 +1,15 @@
 #include <guiniverse/Idefix/Idefix.hpp>
 
+void Idefix::onStartup()
+{
+
+}
+
+void Idefix::onShutdown()
+{
+
+}
+
 void Idefix::onFrame()
 {
     float lin_x = 0.f;

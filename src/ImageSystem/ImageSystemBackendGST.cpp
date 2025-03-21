@@ -42,7 +42,7 @@ void ImageSystemBackendGST::onFrame()
 
                             if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
 
-                                m_ImageSystem->ImageCallback(m_Processors[i].index, GL_RGB, width, height, map.data);
+                                m_ImageSystem->ImageCallback(m_Processors[i].index, false, width, height, map.data);
                                 m_Processors[i].last_frame_timestamp = timestamp;
 
                                 gst_buffer_unmap(buffer, &map);
@@ -65,7 +65,7 @@ void ImageSystemBackendGST::addSink(short port, int addons)
     m_Processors[size].port = port;
 
     std::string sink_name = "sink" + std::to_string(size);
-    std::string launch_string = "udpsrc port=" + std::to_string(port) + " ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! video/x-raw,format=RGB ! appsink name=" + sink_name + " max-buffers=1 drop=true";
+    std::string launch_string = "udpsrc port=" + std::to_string(port) + " buffer-size=1000000 ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! avdec_h264 low-latency=true ! videoconvert ! video/x-raw,format=RGB ! appsink name=" + sink_name + " max-buffers=1 drop=true";
 
     printf(launch_string.c_str());
 

@@ -146,6 +146,9 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     {
         std::lock_guard<std::mutex> lock(m_WheelsMutex);
 
+        ImGui::Text("VoltagePowerManagement %f", m_VoltagePowerManagement.load());
+        ImGui::Text("VoltageAdpter %f", m_VoltageAdapter.load());
+
         for(int i = 0; i < m_Wheels.size(); i++)
         {
             imgui_arrow(ImVec2(-m_Wheels.at(i).y * 500.f + 150.f, -m_Wheels.at(i).x * 500.f + 200.f), m_Wheels.at(i).target_angle, m_Wheels.at(i).target_rpm * (m_Wheels.at(i).invert ? -1.f : 1.f), IM_COL32(60, 60, 60, 255), 3.f, 9.f, false);

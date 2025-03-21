@@ -16,7 +16,10 @@ public:
 
     virtual ~RobotController() = default;
     
+
     virtual void onFrame() = 0;
+    virtual void onStartup() = 0;
+    virtual void onShutdown() = 0;
     
     virtual void onGuiFrame(GLFWwindow* window, JoystickInput& input) = 0;
     virtual void onGuiStartup() = 0;

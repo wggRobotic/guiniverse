@@ -28,6 +28,8 @@ public:
     ~NoName();
 
     void onFrame() override;
+    void onStartup() override;
+    void onShutdown() override;
 
     void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
     void onGuiStartup() override;

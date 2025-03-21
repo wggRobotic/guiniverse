@@ -30,9 +30,19 @@ void ControlGui::GuiFunction() {
     float clear_color[]{0.00f, 0.00f, 0.00f, 0.35f};
     bool show_styles = false;
 
-    for (int i = 0; i < m_Controllers.size(); i++)
-        m_Controllers.at(i)->onGuiStartup();
+    {
+        int robot_selected = m_RobotSelected.load();
+        if (robot_selected != NO_ROBOT_SELECTED)
+        {
+            m_ChangeState.store(true);
 
+            while (m_ChangeState.load())
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            
+            m_Controllers.at(robot_selected)->onGuiStartup();
+        }
+    }
+    
 
     while (!glfwWindowShouldClose(window) && m_Running.load())
     {
@@ -46,6 +56,7 @@ void ControlGui::GuiFunction() {
         ImGui::DockSpaceOverViewport(0, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
 
         int robot_selected = m_RobotSelected.load();
+        int new_robot_selected = robot_selected;
 
         if (ImGui::Begin("Home"))
         {
@@ -54,21 +65,19 @@ void ControlGui::GuiFunction() {
             ImGui::ColorEdit4("Clear Color", clear_color);
             ImGui::Checkbox("Show Styles", &show_styles);
             
-            if (ImGui::BeginCombo("Select which robot to control", robot_selected == NO_ROBOT_SELECTED ? "No robot selected" : m_Controllers.at(robot_selected)->getRobotName()))
+            if (ImGui::BeginCombo("Select which robot to control", new_robot_selected == NO_ROBOT_SELECTED ? "No robot selected" : m_Controllers.at(new_robot_selected)->getRobotName()))
             {
-                if (ImGui::Selectable("No robot selected", robot_selected == NO_ROBOT_SELECTED))
-                    robot_selected  = NO_ROBOT_SELECTED;
+                if (ImGui::Selectable("No robot selected", new_robot_selected == NO_ROBOT_SELECTED))
+                    new_robot_selected = NO_ROBOT_SELECTED;
 
                 for (int i = 0; i < m_Controllers.size(); i++)
                 {
-                    if (ImGui::Selectable(m_Controllers.at(i)->getRobotName(), robot_selected == i)) 
-                        robot_selected = i;
+                    if (ImGui::Selectable(m_Controllers.at(i)->getRobotName(), new_robot_selected == i)) 
+                        new_robot_selected = i;
                 }
                 
                 ImGui::EndCombo();
             }
-
-            m_RobotSelected.store(robot_selected);
 
         }
         ImGui::End();
@@ -112,10 +121,34 @@ void ControlGui::GuiFunction() {
 
             glfwMakeContextCurrent(window);
         }
+
+        if (robot_selected != new_robot_selected)
+        {
+            if (robot_selected != NO_ROBOT_SELECTED)
+                m_Controllers.at(robot_selected)->onGuiShutdown();
+
+            m_RobotSelected.store(new_robot_selected);
+            m_ChangeState.store(true);
+
+            while (m_ChangeState.load())
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+            if (new_robot_selected != NO_ROBOT_SELECTED)
+                m_Controllers.at(new_robot_selected)->onGuiStartup();
+        }
     }
 
-    for (int i = 0; i < m_Controllers.size(); i++)
-        m_Controllers.at(i)->onGuiShutdown();
+    int robot_selected = m_RobotSelected.load();
+    if (robot_selected != NO_ROBOT_SELECTED)
+    {
+        m_Controllers.at(robot_selected)->onGuiShutdown();
+
+        m_RobotSelected.store(NO_ROBOT_SELECTED);
+        m_ChangeState.store(true);
+
+        while (m_ChangeState.load())
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

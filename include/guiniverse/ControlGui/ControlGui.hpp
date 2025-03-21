@@ -30,7 +30,7 @@ private:
     
     std::vector<std::shared_ptr<RobotController>> m_Controllers;
     std::atomic<int> m_RobotSelected;
-
+    std::atomic<bool> m_ChangeState{false};
 
     JoystickInput m_JoystickInput;
     Console m_Console;

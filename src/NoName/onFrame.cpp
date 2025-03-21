@@ -1,5 +1,15 @@
 #include <guiniverse/NoName/NoName.hpp>
 
+void NoName::onStartup()
+{
+
+}
+
+void NoName::onShutdown()
+{
+    
+}
+
 void NoName::onFrame()
 {
     float lin_x = 0.f;
