@@ -29,7 +29,6 @@ ImageSystem::~ImageSystem()
             quirc_destroy(m_ImageProcessors[i]->qrcode_addon.quirc_instance);
         }
         
-        if (m_ImageProcessors[i]->addons & ImageSystemAddOn_HazardSigns);
     }
 }
 
@@ -48,8 +47,6 @@ int ImageSystem::addImageProcessor(int addons, const std::string& imgui_panel_na
         m_ImageProcessors[size]->qrcode_addon.publisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
     }
 
-    if (m_ImageProcessors[size]->addons & ImageSystemAddOn_HazardSigns);
-
     m_ImageProcessors[size]->addon_thread = std::thread(&ImageSystem::AddOnThreadFunction, this, size);
 
     return size;
@@ -62,56 +59,59 @@ void ImageSystem::AddOnThreadFunction(int index)
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
         //qrcode
-        int width, height;
+        if (m_ImageProcessors[index]->addons & ImageSystemAddOn_QRCode) 
         {
-            std::lock_guard<std::mutex> lock(m_ImageProcessors[index]->image_mutex);
-
-            width = m_ImageProcessors[index]->image.width;
-            height = m_ImageProcessors[index]->image.height;
-            const unsigned char* data = m_ImageProcessors[index]->image.data.data();
-
-            m_ImageProcessors[index]->qrcode_addon.gray_scale.reserve(width * height);
-
-            if (m_ImageProcessors[index]->image.is_bgr) 
+            int width, height;
             {
-                for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
-                    m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                        0.299f * (float)data[offset + 2] + 
-                        0.587f * (float)data[offset + 1] + 
-                        0.114f * (float)data[offset + 0]
-                    );
+                std::lock_guard<std::mutex> lock(m_ImageProcessors[index]->image_mutex);
+
+                width = m_ImageProcessors[index]->image.width;
+                height = m_ImageProcessors[index]->image.height;
+                const unsigned char* data = m_ImageProcessors[index]->image.data.data();
+
+                m_ImageProcessors[index]->qrcode_addon.gray_scale.reserve(width * height);
+
+                if (m_ImageProcessors[index]->image.is_bgr) 
+                {
+                    for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
+                        m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
+                            0.299f * (float)data[offset + 2] + 
+                            0.587f * (float)data[offset + 1] + 
+                            0.114f * (float)data[offset + 0]
+                        );
+                    }
+                }
+                else
+                {
+                    for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
+                        m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
+                            0.299f * (float)data[offset + 0] + 
+                            0.587f * (float)data[offset + 1] + 
+                            0.114f * (float)data[offset + 2]
+                        );
+                    }
                 }
             }
-            else
-            {
-                for (int i = 0, offset = 0; i < width * height; i++, offset+=3) {
-                    m_ImageProcessors[index]->qrcode_addon.gray_scale[i] = (unsigned char)(
-                        0.299f * (float)data[offset + 0] + 
-                        0.587f * (float)data[offset + 1] + 
-                        0.114f * (float)data[offset + 2]
-                    );
+
+            quirc_resize(m_ImageProcessors[index]->qrcode_addon.quirc_instance, width, height);
+
+            uint8_t *qr_image = quirc_begin(m_ImageProcessors[index]->qrcode_addon.quirc_instance, &width, &height);
+            memcpy(qr_image,  m_ImageProcessors[index]->qrcode_addon.gray_scale.data(), width * height);
+            quirc_end(m_ImageProcessors[index]->qrcode_addon.quirc_instance);
+
+            int count = quirc_count(m_ImageProcessors[index]->qrcode_addon.quirc_instance);
+
+            for (int i = 0; i < count; i++) {
+                struct quirc_code code;
+                struct quirc_data data;
+
+                quirc_extract(m_ImageProcessors[index]->qrcode_addon.quirc_instance, i, &code);
+
+                if (quirc_decode(&code, &data) == QUIRC_SUCCESS) {
+                    std_msgs::msg::String msg;
+                    msg.data = std::string((char*)data.payload);
+                    m_ImageProcessors[index]->qrcode_addon.publisher->publish(msg);
                 }
-            }
-        }
-
-        quirc_resize(m_ImageProcessors[index]->qrcode_addon.quirc_instance, width, height);
-
-        uint8_t *qr_image = quirc_begin(m_ImageProcessors[index]->qrcode_addon.quirc_instance, &width, &height);
-        memcpy(qr_image,  m_ImageProcessors[index]->qrcode_addon.gray_scale.data(), width * height);
-        quirc_end(m_ImageProcessors[index]->qrcode_addon.quirc_instance);
-
-        int count = quirc_count(m_ImageProcessors[index]->qrcode_addon.quirc_instance);
-
-        for (int i = 0; i < count; i++) {
-            struct quirc_code code;
-            struct quirc_data data;
-
-            quirc_extract(m_ImageProcessors[index]->qrcode_addon.quirc_instance, i, &code);
-
-            if (quirc_decode(&code, &data) == QUIRC_SUCCESS) {
-                std_msgs::msg::String msg;
-                msg.data = std::string((char*)data.payload);
-                m_ImageProcessors[index]->qrcode_addon.publisher->publish(msg);
             }
         }
 

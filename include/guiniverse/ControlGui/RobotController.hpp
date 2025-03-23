@@ -11,8 +11,10 @@ class RobotController
 {
 public:
 
+    friend class ControlGui;
+
     RobotController(const std::string& RobotName, const std::string& RosRobotName) 
-        : node(std::make_shared<rclcpp::Node>(RosRobotName + "_controller_node", "/" + RosRobotName)), m_RobotName(RobotName), m_RosRobotName(RosRobotName) {};
+        : m_RobotName(RobotName), m_RosRobotName(RosRobotName) {};
 
     virtual ~RobotController() = default;
     
@@ -32,4 +34,17 @@ protected:
     std::string m_RobotName;
     std::string m_RosRobotName;
     rclcpp::Node::SharedPtr node;
+
+private:
+
+    void _onStartup() {
+        node = std::make_shared<rclcpp::Node>(m_RosRobotName + "_controller_node", "/" + m_RosRobotName);
+        onStartup();
+    };
+
+    void _onShutdown() {
+        node.reset();
+        onShutdown();
+    };
+
 };

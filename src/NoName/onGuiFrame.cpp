@@ -91,5 +91,6 @@ void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
+    m_ImageSystem->onGuiFrame();
     m_DataCaptureSystem->ImGuiPanels();
 }

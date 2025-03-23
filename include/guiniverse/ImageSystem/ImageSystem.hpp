@@ -16,8 +16,7 @@ enum ImageSystemAddOn
 {
     ImageSystemAddOn_None = 0,
     ImageSystemAddOn_QRCode = 1,
-    ImageSystemAddOn_HazardSigns = 2,
-    ImageSystemAddOn_Diff = 4,
+    ImageSystemAddOn_Diff = 2,
 };
 
 struct ImageSystemImageProcessor

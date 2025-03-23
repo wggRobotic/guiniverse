@@ -54,14 +54,29 @@ void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 
         m_Input.main_axes = imgui_joystick("virtual joystick", 200.f, ImVec2(0.2f, 0.2f), (m_Input.main_axes.x == 0.f && m_Input.main_axes.y == 0.f) ? 0 : &m_Input.main_axes, (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
 
-        ImGui::Text("Joystick %f %f", m_Input.main_axes.x, m_Input.main_axes.y);
-
         ImGui::SetCursorScreenPos(ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
 
         ImGui::VSliderFloat("##vslider", ImVec2(20, 200), &m_Input.scalar, 0.0f, 1.0f, "%.2f");
 
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 260.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+
+        ImGui::VSliderFloat("##slider_roll", ImVec2(20, 200), &m_Input.roll, -1.0f, 1.0f, "%.2f");
+
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 290.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+
+        ImGui::VSliderFloat("##slider_pitch", ImVec2(20, 200), &m_Input.pitch, -1.0f, 1.0f, "%.2f");
+
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 320.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+
+        ImGui::VSliderFloat("##slider_yaw", ImVec2(20, 200), &m_Input.yaw, -1.0f, 1.0f, "%.2f");
+
+        ImGui::SetCursorScreenPos(ImVec2(pos.x + 350.f, pos.y + ImGui::GetStyle().ItemSpacing.y));
+
+        ImGui::Text("IMU Angle %f", m_IMUAngle.load());
+
     }
     ImGui::End();
 
+    m_ImageSystem->onGuiFrame();
     m_DataCaptureSystem->ImGuiPanels();
 }

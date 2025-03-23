@@ -25,6 +25,16 @@ N10::~N10()
 
 void N10::onStartup() 
 {
+    for (int i = 0; i < m_Wheels.size(); i++)
+    {
+        m_Wheels[i].target_rpm = 0.f;
+        m_Wheels[i].target_angle = 0.f;
+        m_Wheels[i].last_rpm = 0.f;
+        m_Wheels[i].last_angle = 0.f;
+    }
+
+    m_EnableMotorClientWaiting = false;
+
     m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
     m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
     m_GripperAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
@@ -77,7 +87,7 @@ void N10::onShutdown()
     m_ImageSystemBackendGST.reset();
     m_DataCaptureSystem.reset();
 
-    m_ImageSystem.reset()
+    m_ImageSystem.reset();
 }
 
 void N10::addWheel(float x, float y, float radius, bool invert) 

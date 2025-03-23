@@ -41,12 +41,12 @@ void ControlGui::RobotControllerThreadFunction() {
         if (m_ChangeState.load())
         {
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->onStartup();
+                m_Controllers.at(robot_selected)->_onShutdown();
             
             robot_selected = m_RobotSelected.load();
 
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->onShutdown();
+                m_Controllers.at(robot_selected)->_onStartup();
             
             m_ChangeState.store(false);
         }

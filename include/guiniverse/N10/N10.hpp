@@ -1,7 +1,6 @@
 #pragma once
 
 #include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
-#include <guiniverse/ImageSystem/ImageSystemBackendROS.hpp>
 
 #include <guiniverse/ControlGui/RobotController.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
@@ -62,7 +61,6 @@ private:
 
     std::shared_ptr<ImageSystem> m_ImageSystem;
     std::shared_ptr<ImageSystemBackendGST> m_ImageSystemBackendGST;
-    std::shared_ptr<ImageSystemBackendROS> m_ImageSystemBackendROS;
 
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <guiniverse/ControlGui/RobotController.hpp>
+
+#include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
 #include <atomic>
@@ -40,6 +42,9 @@ public:
 private:
 
     void addWheel(float x, float y, float radius, bool invert);
+
+    std::shared_ptr<ImageSystem> m_ImageSystem;
+    std::shared_ptr<ImageSystemBackendGST> m_ImageSystemBackendGST;
 
     std::shared_ptr<DataCaptureSystem> m_DataCaptureSystem;
 

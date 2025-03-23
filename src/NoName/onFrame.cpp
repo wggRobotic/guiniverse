@@ -1,17 +1,11 @@
 #include <guiniverse/NoName/NoName.hpp>
 
-void NoName::onStartup()
-{
-
-}
-
-void NoName::onShutdown()
-{
-    
-}
-
 void NoName::onFrame()
 {
+    rclcpp::spin_some(node);
+
+    m_ImageSystemBackendGST->onFrame();
+
     float lin_x = 0.f;
     float ang = 0.f;
     bool gas = false;
@@ -95,4 +89,6 @@ void NoName::onFrame()
         RCLCPP_INFO(node->get_logger(), "SetMode Service didn't respond in 5 seconds");
         m_SetModeClientWaiting = false; 
     }
+
+    rclcpp::spin_some(node);
 }

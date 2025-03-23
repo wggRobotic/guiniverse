@@ -1,17 +1,11 @@
 #include <guiniverse/Idefix/Idefix.hpp>
 
-void Idefix::onStartup()
-{
-
-}
-
-void Idefix::onShutdown()
-{
-
-}
-
 void Idefix::onFrame()
 {
+    rclcpp::spin_some(node);
+
+    m_ImageSystemBackendGST->onFrame();
+
     float lin_x = 0.f;
     float lin_y = 0.f;
     float ang = 0.f;
@@ -40,4 +34,6 @@ void Idefix::onFrame()
         m_TwistMessage.angular.z = (gas ? ang : 0.f);
     }
     m_TwistPublisher->publish(m_TwistMessage);
+
+    rclcpp::spin_some(node);
 }
