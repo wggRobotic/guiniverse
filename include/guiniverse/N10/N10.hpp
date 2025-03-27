@@ -1,8 +1,8 @@
 #pragma once
 
-#include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
-
 #include <guiniverse/ControlGui/RobotController.hpp>
+
+#include <guiniverse/ImageSystem/ImageSystemBackendGST.hpp>
 #include <guiniverse/DataCaptureSystem.hpp>
 
 #include <atomic>

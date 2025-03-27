@@ -43,8 +43,8 @@ private:
     };
 
     void _onShutdown() {
-        node.reset();
         onShutdown();
+        node.reset();
     };
 
 };

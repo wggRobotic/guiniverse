@@ -4,11 +4,12 @@
 
 void NoName::onGuiStartup()
 {
-
+    m_ImageSystem->onGuiStartup();
 }
 
 void NoName::onGuiShutdown()
 {
+    m_ImageSystem->onGuiShutdown();
 }
 
 void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)

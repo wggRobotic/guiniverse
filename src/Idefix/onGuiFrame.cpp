@@ -4,11 +4,12 @@
 
 void Idefix::onGuiStartup()
 {
-
+    m_ImageSystem->onGuiStartup();
 }
 
 void Idefix::onGuiShutdown()
 {
+    m_ImageSystem->onGuiShutdown();
 }
 
 void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)

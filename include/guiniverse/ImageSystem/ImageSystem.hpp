@@ -22,10 +22,10 @@ enum ImageSystemAddOn
 struct ImageSystemImageProcessor
 {
     //image
-    std::mutex image_mutex;
-
     struct
     {
+        std::mutex mutex;
+
         bool holds = false;
         bool dirty = false;
         int width = 0;
@@ -34,33 +34,57 @@ struct ImageSystemImageProcessor
         std::vector<unsigned char> data;
     } image;   
 
-    //addons
-    int addons = 0;
-    std::thread addon_thread;
-    std::atomic<bool> thread_should_close{false};
-
-    //qrcode addon
     struct
     {
-        struct quirc* quirc_instance;
-        std::vector<unsigned char> gray_scale;
-        rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
-    } qrcode_addon;
+        int flags = 0;
+        std::thread thread;
+        std::atomic<bool> thread_should_close{false};
 
-    //HazardSign
+        struct
+        {
+            struct quirc* quirc_instance;
+            std::vector<unsigned char> gray_scale;
+            rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
+        } qrcode;
 
-    //imgui
-    std::string imgui_panel_name = "none";
+        struct
+        {
+            struct
+            {
+                std::mutex mutex;
+
+                bool holds = false;
+                bool dirty = false;
+                int width = 0;
+                int height = 0;
+                std::vector<unsigned char> data;
+            } image;   
+        
+            struct
+            {
+                std::atomic<float> diff_intensity{4.f};
+
+                unsigned int gl_texture;
+                unsigned int width = 0;
+                unsigned int height = 0;
+            } imgui;
+        } diff;
+
+    } addons;
 
     struct
     {
+        std::string panel_name = "none";
+
+        bool flip_vertically = false;
+        bool flip_horizontally = false;
+
         unsigned int gl_texture;
         unsigned int width = 0;
         unsigned int height = 0;
-    } texture;
+    } imgui;
 
-    bool flip_vertically = false;
-    bool flip_horizontally = false;
+    
 };
 
 class ImageSystem
@@ -75,7 +99,7 @@ public:
     void onGuiFrame();
     void onGuiShutdown();
 
-    int addImageProcessor(int addons, const std::string& imgui_panel_name);
+    int addImageProcessor(int addon_flags, const std::string& imgui_panel_name);
     void ImageCallback(int index, bool is_bgr, int width, int height, unsigned char* data);
 
 private:

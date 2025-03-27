@@ -21,7 +21,7 @@ void Idefix::onStartup()
     m_ImageSystemBackendGST->addSink(6000, ImageSystemAddOn_QRCode);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
-    m_DataCaptureSystem->addSection("Barcodes", "barcode");
+    m_DataCaptureSystem->addSection("QRCodes", "qrcode");
 }
 
 void Idefix::onShutdown()
@@ -34,7 +34,7 @@ void Idefix::onShutdown()
     m_DataCaptureSystem.reset();
     
     m_ImageSystemBackendGST.reset();
-    m_DataCaptureSystem.reset();
+    m_ImageSystem.reset();
 }
 
 void Idefix::IMUCallback(const std_msgs::msg::Float32::SharedPtr msg)

@@ -57,7 +57,7 @@ void N10::onStartup()
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(5000, ImageSystemAddOn_QRCode);
+    m_ImageSystemBackendGST->addSink(5000, ImageSystemAddOn_QRCode | ImageSystemAddOn_Diff);
     m_ImageSystemBackendGST->addSink(5001, ImageSystemAddOn_QRCode);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
@@ -85,9 +85,9 @@ void N10::onShutdown()
     m_EnableMotorClient.reset();
 
     m_ImageSystemBackendGST.reset();
-    m_DataCaptureSystem.reset();
-
     m_ImageSystem.reset();
+
+    m_DataCaptureSystem.reset();
 }
 
 void N10::addWheel(float x, float y, float radius, bool invert) 

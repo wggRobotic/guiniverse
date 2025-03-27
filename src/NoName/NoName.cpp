@@ -35,7 +35,7 @@ void NoName::onStartup()
     m_ImageSystemBackendGST->addSink(7002, ImageSystemAddOn_None);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
-    m_DataCaptureSystem->addSection("Barcodes", "barcode");
+    m_DataCaptureSystem->addSection("QRCodes", "qrcode");
 }
 
 void NoName::onShutdown()
@@ -48,7 +48,7 @@ void NoName::onShutdown()
     m_DataCaptureSystem.reset();
 
     m_ImageSystemBackendGST.reset();
-    m_DataCaptureSystem.reset();
+    m_ImageSystem.reset();
 }
 
 
