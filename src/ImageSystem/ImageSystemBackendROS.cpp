@@ -17,7 +17,7 @@ ImageSystemBackendROS::~ImageSystemBackendROS()
 }\
 
 
-void ImageSystemBackendROS::addSubscriber(const std::string& topic_name, int addons)
+void ImageSystemBackendROS::addSubscriber(const std::string& topic_name)
 {
     int size = m_Processors.size();
     m_Processors.resize(size + 1);
@@ -26,5 +26,5 @@ void ImageSystemBackendROS::addSubscriber(const std::string& topic_name, int add
 
     image_transport::TransportHints transport_hints(m_Node.get(), "compressed");
     m_Processors[size].subscriber = m_ImageTransport->subscribe(topic_name, 10, MAKE_CALLBACK(size), nullptr, &transport_hints);
-    m_Processors[size].index = m_ImageSystem->addImageProcessor(addons, "Ros2 topic " + topic_name);
+    m_Processors[size].index = m_ImageSystem->addImageProcessor("Ros2 topic " + topic_name);
 }

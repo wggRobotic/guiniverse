@@ -30,7 +30,7 @@ public:
     
     void onFrame();
     
-    void addSink(short port, int addons);
+    void addSink(short port);
 
 private:
 

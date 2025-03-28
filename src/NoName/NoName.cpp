@@ -30,9 +30,9 @@ void NoName::onStartup()
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(7000, ImageSystemAddOn_QRCode);
-    m_ImageSystemBackendGST->addSink(7001, ImageSystemAddOn_QRCode);
-    m_ImageSystemBackendGST->addSink(7002, ImageSystemAddOn_None);
+    m_ImageSystemBackendGST->addSink(7000);
+    m_ImageSystemBackendGST->addSink(7001);
+    m_ImageSystemBackendGST->addSink(7002);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");

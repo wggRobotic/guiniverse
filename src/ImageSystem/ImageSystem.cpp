@@ -120,29 +120,20 @@ ImageSystem::~ImageSystem()
         if (m_ImageProcessors[i]->addons.thread.joinable())
             m_ImageProcessors[i]->addons.thread.join();
 
-        if (m_ImageProcessors[i]->addons.flags & ImageSystemAddOn_QRCode)
-        {
-            quirc_destroy(m_ImageProcessors[i]->addons.qrcode.quirc_instance);
-        }
-        
+        quirc_destroy(m_ImageProcessors[i]->addons.qrcode.quirc_instance);
     }
 }
 
-int ImageSystem::addImageProcessor(int addon_flags, const std::string& imgui_panel_name)
+int ImageSystem::addImageProcessor(const std::string& imgui_panel_name)
 {
     int size = m_ImageProcessors.size();
     m_ImageProcessors.resize(size + 1);
     m_ImageProcessors[size] = std::make_shared<ImageSystemImageProcessor>();
 
     m_ImageProcessors[size]->imgui_panel_name = imgui_panel_name;
-    
-    m_ImageProcessors[size]->addons.flags = addon_flags;
 
-    if (m_ImageProcessors[size]->addons.flags & ImageSystemAddOn_QRCode) 
-    {
-        m_ImageProcessors[size]->addons.qrcode.quirc_instance = quirc_new();
-        m_ImageProcessors[size]->addons.qrcode.publisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
-    }
+    m_ImageProcessors[size]->addons.qrcode.quirc_instance = quirc_new();
+    m_ImageProcessors[size]->addons.qrcode.publisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
 
     m_ImageProcessors[size]->addons.thread = std::thread(&ImageSystem::AddOnThreadFunction, this, size);
 
@@ -160,7 +151,7 @@ void ImageSystem::AddOnThreadFunction(int index)
         m_ImageProcessors[index]->image.copy_image(image);
 
         //qrcode
-        if (m_ImageProcessors[index]->addons.flags & ImageSystemAddOn_QRCode && !image.empty()) 
+        if (m_ImageProcessors[index]->addons.flags.load() & ImageSystemAddOn_QRCode && !image.empty()) 
         {
             cv::Mat grayscale;
             cv::cvtColor(image, grayscale, cv::COLOR_RGB2GRAY);
@@ -194,16 +185,30 @@ void ImageSystem::AddOnThreadFunction(int index)
 void ImageSystem::ImageCallback(int index, cv::Mat& image)
 {
 
+    int addon_flags = m_ImageProcessors[index]->addons.flags.load();
+
     cv::Mat old_image;
-    m_ImageProcessors[index]->image.copy_image(old_image);
+    if (addon_flags & ImageSystemAddOn_Diff) m_ImageProcessors[index]->image.copy_image(old_image);
+
     m_ImageProcessors[index]->image.sub_image_transfer_ownership(image);
 
-    if (old_image.cols == image.cols && old_image.rows == image.rows)
+    if (old_image.cols == image.cols && old_image.rows == image.rows && addon_flags & ImageSystemAddOn_Diff)
     {
         cv::Mat diff_image;
         cv::absdiff(image, old_image, diff_image);
         
         m_ImageProcessors[index]->addons.diff.image.sub_image_transfer_ownership(diff_image);
+    }
+
+    if (addon_flags & ImageSystemAddon_GrayScale)
+    {
+        cv::Mat grayscale;
+        cv::Mat grayscale_rgb;
+
+        cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
+        cv::cvtColor(grayscale, grayscale_rgb, cv::COLOR_GRAY2BGR);
+
+        m_ImageProcessors[index]->addons.grayscale.image.sub_image_transfer_ownership(grayscale_rgb);
     }
 }
 
@@ -212,11 +217,8 @@ void ImageSystem::onGuiStartup()
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->image.create_texture();
-
-        if (m_ImageProcessors[i]->addons.flags & ImageSystemAddOn_Diff)
-        {
-            m_ImageProcessors[i]->addons.diff.image.create_texture();
-        }
+        m_ImageProcessors[i]->addons.diff.image.create_texture();
+        m_ImageProcessors[i]->addons.grayscale.image.create_texture();
     }
 }
 
@@ -226,11 +228,8 @@ void ImageSystem::onGuiShutdown()
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->image.destroy_texture();
-
-        if (m_ImageProcessors[i]->addons.flags & ImageSystemAddOn_Diff)
-        {
-            m_ImageProcessors[i]->addons.diff.image.destroy_texture();
-        }
+        m_ImageProcessors[i]->addons.diff.image.destroy_texture();
+        m_ImageProcessors[i]->addons.grayscale.image.destroy_texture();
     }
 }
 
@@ -238,29 +237,42 @@ void ImageSystem::onGuiFrame()
 {
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
+        int addon_flags = m_ImageProcessors[i]->addons.flags.load();
+        bool qrcode_addon = (addon_flags & ImageSystemAddOn_QRCode ? true : false);
+        bool diff_addon = (addon_flags & ImageSystemAddOn_Diff ? true : false);
+        bool grayscale_addon = (addon_flags & ImageSystemAddon_GrayScale ? true : false);
 
         if (ImGui::Begin(m_ImageProcessors[i]->imgui_panel_name.c_str()))
         {
             ImGui::Checkbox("Flip vertically", &m_ImageProcessors[i]->flip_vertically);
             ImGui::Checkbox("Flip horizontally", &m_ImageProcessors[i]->flip_horizontally);
+            
+            ImGui::Checkbox("QRCode scanning", &qrcode_addon);
+            ImGui::Checkbox("Image diff", &diff_addon);
+            ImGui::Checkbox("Image grayscale", &grayscale_addon);
 
             m_ImageProcessors[i]->image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
         }
         ImGui::End();
 
-        
-
-        if (m_ImageProcessors[i]->addons.flags & ImageSystemAddOn_Diff)
+        if (addon_flags & ImageSystemAddOn_Diff)
         {
             if (ImGui::Begin((m_ImageProcessors[i]->imgui_panel_name + " - diff").c_str()))
             {
-                float diff_intensity = m_ImageProcessors[i]->addons.diff.diff_intensity.load();
-                ImGui::SliderFloat(("##" + m_ImageProcessors[i]->imgui_panel_name + " diff slider").c_str(), &diff_intensity, 1.f, 10.f);
-                m_ImageProcessors[i]->addons.diff.diff_intensity.store(diff_intensity);
-
                 m_ImageProcessors[i]->addons.diff.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
             }
             ImGui::End();
         }
+
+        if (addon_flags & ImageSystemAddon_GrayScale)
+        {
+            if (ImGui::Begin((m_ImageProcessors[i]->imgui_panel_name + " - grayscale").c_str()))
+            {
+                m_ImageProcessors[i]->addons.grayscale.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
+            }
+            ImGui::End();
+        }
+
+        m_ImageProcessors[i]->addons.flags.store((qrcode_addon ? ImageSystemAddOn_QRCode : 0) | (diff_addon ? ImageSystemAddOn_Diff : 0) | (grayscale_addon ? ImageSystemAddon_GrayScale : 0));
     }
 }

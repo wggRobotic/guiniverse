@@ -57,12 +57,11 @@ void N10::onStartup()
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(5000, ImageSystemAddOn_QRCode | ImageSystemAddOn_Diff);
-    m_ImageSystemBackendGST->addSink(5001, ImageSystemAddOn_QRCode);
+    m_ImageSystemBackendGST->addSink(5000);
+    m_ImageSystemBackendGST->addSink(5001);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");
-    m_DataCaptureSystem->addSection("HazardSings", "hazard_signs");
 }
 
 void N10::onShutdown()

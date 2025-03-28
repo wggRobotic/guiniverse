@@ -18,7 +18,7 @@ void Idefix::onStartup()
     m_ImageSystem = std::make_shared<ImageSystem>(node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(6000, ImageSystemAddOn_QRCode);
+    m_ImageSystemBackendGST->addSink(6000);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");

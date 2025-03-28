@@ -58,7 +58,7 @@ void ImageSystemBackendGST::onFrame()
     }
 }
 
-void ImageSystemBackendGST::addSink(short port, int addons)
+void ImageSystemBackendGST::addSink(short port)
 {
     int size = m_Processors.size();
     m_Processors.resize(size + 1);
@@ -84,5 +84,5 @@ void ImageSystemBackendGST::addSink(short port, int addons)
 
     gst_element_set_state(m_Processors[size].pipeline, GST_STATE_PLAYING);
 
-    m_Processors[size].index = m_ImageSystem->addImageProcessor(addons, "GStreamer sink on UDP port " + std::to_string(port));
+    m_Processors[size].index = m_ImageSystem->addImageProcessor("GStreamer sink on UDP port " + std::to_string(port));
 }

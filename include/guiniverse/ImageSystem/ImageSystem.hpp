@@ -39,13 +39,14 @@ enum ImageSystemAddOn
     ImageSystemAddOn_None = 0,
     ImageSystemAddOn_QRCode = 1,
     ImageSystemAddOn_Diff = 2,
+    ImageSystemAddon_GrayScale = 4,
 };
 
 struct ImageSystemImageProcessor
 {
     struct
     {
-        int flags = 0;
+        std::atomic<int> flags{ImageSystemAddOn_None};
         std::thread thread;
         std::atomic<bool> thread_should_close{false};
 
@@ -58,8 +59,6 @@ struct ImageSystemImageProcessor
         struct
         {
             ImageSystemImage image;
-        
-            std::atomic<float> diff_intensity{4.f};
         } diff;
 
         struct
@@ -89,7 +88,7 @@ public:
     void onGuiFrame();
     void onGuiShutdown();
 
-    int addImageProcessor(int addon_flags, const std::string& imgui_panel_name);
+    int addImageProcessor(const std::string& imgui_panel_name);
     void ImageCallback(int index, cv::Mat& image);
 
 private:
