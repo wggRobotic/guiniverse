@@ -42,7 +42,8 @@ void ImageSystemBackendGST::onFrame()
 
                             if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
 
-                                m_ImageSystem->ImageCallback(m_Processors[i].index, false, width, height, map.data);
+                                cv::Mat image_mat(height, width, CV_8UC3, (void*)map.data);
+                                m_ImageSystem->ImageCallback(m_Processors[i].index, image_mat);
                                 m_Processors[i].last_frame_timestamp = timestamp;
 
                                 gst_buffer_unmap(buffer, &map);

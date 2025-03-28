@@ -12,7 +12,8 @@ ImageSystemBackendROS::~ImageSystemBackendROS()
 }
 
 #define MAKE_CALLBACK(INDEX) [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr &msg) {\
-    m_ImageSystem->ImageCallback(m_Processors[INDEX].index, true, msg->width, msg->height, (unsigned char*) msg->data.data());\
+    cv::Mat image_mat((int)msg->width, (int)msg->height, CV_8UC3, (void*)msg->data.data());\
+    m_ImageSystem->ImageCallback(m_Processors[INDEX].index, image_mat);\
 }\
 
 
