@@ -1,18 +1,16 @@
 #include <GL/glew.h>
-
-#include <guiniverse/ControlGui/ControlGui.hpp>
-
-#include <guiniverse/N10/N10.hpp>
-#include <guiniverse/Idefix/Idefix.hpp>
-#include <guiniverse/NoName/NoName.hpp>
-
 #include <gst/gst.h>
+#include <guiniverse/control_gui/control_gui.hpp>
+#include <guiniverse/idefix/idefix.hpp>
+#include <guiniverse/n10/n10.hpp>
+#include <guiniverse/no_name/no_name.hpp>
 
 ControlGui* gui_ptr;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    if (!glfwInit()) return 1;
+    if (!glfwInit())
+        return 1;
     glewInit();
 
     rclcpp::init(argc, argv);
