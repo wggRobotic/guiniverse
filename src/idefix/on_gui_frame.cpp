@@ -13,6 +13,8 @@ void Idefix::OnGuiShutdown()
 
 void Idefix::OnGuiFrame(GLFWwindow* window, JoystickInput& input)
 {
+    (void) input;
+
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
 

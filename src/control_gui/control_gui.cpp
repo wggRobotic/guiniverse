@@ -42,12 +42,12 @@ void ControlGui::RobotControllerThreadFunction()
         if (m_ChangeState)
         {
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->shutdown();
+                m_Controllers.at(robot_selected)->Shutdown();
 
             robot_selected = m_RobotSelected;
 
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->start();
+                m_Controllers.at(robot_selected)->Start();
 
             m_ChangeState = false;
         }

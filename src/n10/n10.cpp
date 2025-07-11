@@ -34,24 +34,21 @@ void N10::OnStartup()
 
     m_EnableMotorClientWaiting = false;
 
-    m_WheelsRPMFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
-    m_WheelsAngleFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
-    m_GripperAngleFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
-    m_GripperDistanceSensorSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("gripper/distance_sensor", 10, std::bind(&N10::GripperDistanceSensorCallback, this, std::placeholders::_1));
+    m_WheelsRPMFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&::N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
+    m_WheelsAngleFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&::N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperAngleFeedbackSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&::N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperDistanceSensorSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("gripper/distance_sensor", 10, std::bind(&::N10::GripperDistanceSensorCallback, this, std::placeholders::_1));
 
-    m_VoltagePowerManagementSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("voltagePwrMgmt", 10, std::bind(&N10::VoltagePowerManagementCallback, this, std::placeholders::_1));
-    m_VoltageAdapterSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("voltageAdapter", 10, std::bind(&N10::VoltageAdatpterCallback, this, std::placeholders::_1));
-    m_WheelsEnabledSubscriber = GetNode()->create_subscription<std_msgs::msg::ByteMultiArray>("wheels/enabled", 10, std::bind(&N10::WheelsEnabledCallback, this, std::placeholders::_1));
+    m_VoltagePowerManagementSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("voltagePwrMgmt", 10, std::bind(&::N10::VoltagePowerManagementCallback, this, std::placeholders::_1));
+    m_VoltageAdapterSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("voltageAdapter", 10, std::bind(&::N10::VoltageAdapterCallback, this, std::placeholders::_1));
+    m_WheelsEnabledSubscriber = GetNode()->create_subscription<std_msgs::msg::ByteMultiArray>("wheels/enabled", 10, std::bind(&::N10::WheelsEnabledCallback, this, std::placeholders::_1));
 
     m_WheelsRPMPublisher = GetNode()->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
     m_WheelsAnglePublisher = GetNode()->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
     m_GripperAnglePublisher = GetNode()->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/angle/cmd", 10);
 
-    m_EnableMotorClient = GetNode()->create_client<std_srvs::srv::SetBool>("whe"
-                                                                           "els"
-                                                                           "/en"
-                                                                           "abl"
-                                                                           "e");
+    constexpr auto srv_name = "wheels/enable";
+    m_EnableMotorClient = GetNode()->create_client<std_srvs::srv::SetBool>(srv_name);
 
     m_ImageSystem = std::make_shared<ImageSystem>(GetNode());
 
@@ -139,6 +136,7 @@ void N10::VoltageAdapterCallback(const std_msgs::msg::Float32::UniquePtr msg)
 
 void N10::WheelsEnabledCallback(const std_msgs::msg::ByteMultiArray::UniquePtr msg)
 {
+    (void) msg;
 }
 
 void N10::EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response)

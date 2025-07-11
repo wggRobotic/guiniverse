@@ -2,7 +2,7 @@
 
 void NoName::OnFrame()
 {
-    rclcpp::spin_some(m_Node);
+    rclcpp::spin_some(GetNode());
 
     m_ImageSystemBackendGST->OnFrame();
 
@@ -16,35 +16,35 @@ void NoName::OnFrame()
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
 
-        gas = m_Input.gas_button;
+        gas = m_Input.GasButton;
 
-        lin_x = m_Input.main_axes.y * m_Input.scalar;
-        ang = m_Input.main_axes.x * m_Input.scalar
-            * (m_Input.main_axes.y * m_Input.scalar < 0 ? -1.f : 1.f) * 2.f;
+        lin_x = m_Input.MainAxes.y * m_Input.Scalar;
+        ang = m_Input.MainAxes.x * m_Input.Scalar
+            * (m_Input.MainAxes.y * m_Input.Scalar < 0 ? -1.f : 1.f) * 2.f;
 
-        if (m_Input.enable_button_physical)
+        if (m_Input.EnableButtonPhysical)
         {
-            if (!m_Input.enable_button)
+            if (!m_Input.EnableButton)
             {
                 set_mode_service = true;
                 set_mode_service_enable = true;
-                m_Input.enable_button = true;
+                m_Input.EnableButton = true;
             }
         }
         else
-            m_Input.enable_button = false;
+            m_Input.EnableButton = false;
 
-        if (m_Input.disable_button_physical)
+        if (m_Input.DisableButtonPhysical)
         {
-            if (!m_Input.disable_button)
+            if (!m_Input.DisableButton)
             {
                 set_mode_service = true;
                 set_mode_service_enable = false;
-                m_Input.disable_button = true;
+                m_Input.DisableButton = true;
             }
         }
         else
-            m_Input.disable_button = false;
+            m_Input.DisableButton = false;
     }
 
     {
@@ -59,11 +59,11 @@ void NoName::OnFrame()
 
         m_RPMMessage.data.resize(m_Wheels.size());
 
-        for (int i = 0; i < m_Wheels.size(); i++)
+        for (unsigned i = 0; i < m_Wheels.size(); i++)
         {
             m_Wheels[i].TargetRPM = 60.f * (lin_x - m_Wheels[i].Y * ang)
-                                   / (2.f * m_Wheels[i].Radius * M_PI)
-                                   * (m_Wheels[i].Invert ? -1.f : 1.f);
+                                  / (2.f * m_Wheels[i].Radius * M_PI)
+                                  * (m_Wheels[i].Invert ? -1.f : 1.f);
             m_RPMMessage.data[i] = m_Wheels[i].TargetRPM;
         }
     }
@@ -72,7 +72,7 @@ void NoName::OnFrame()
     if (!m_SetModeClientWaiting && set_mode_service)
     {
         if (!m_SetModeClient->service_is_ready())
-            RCLCPP_WARN(m_Node->get_logger(), "SetMode service is not available.");
+            RCLCPP_WARN(GetNode()->get_logger(), "SetMode service is not available.");
 
         else
         {
@@ -80,21 +80,22 @@ void NoName::OnFrame()
             request->mode.mode = (set_mode_service_enable ? edu_robot::msg::Mode::REMOTE_CONTROLLED : edu_robot::msg::Mode::INACTIVE);
 
             if (set_mode_service_enable)
-                RCLCPP_INFO(m_Node->get_logger(), "Enabeling ...");
+                RCLCPP_INFO(GetNode()->get_logger(), "Enabeling ...");
             else
-                RCLCPP_INFO(m_Node->get_logger(), "Disabling ...");
+                RCLCPP_INFO(GetNode()->get_logger(), "Disabling ...");
 
             m_SetModeClient->async_send_request(request, std::bind(&NoName::SetModeClientCallback, this, std::placeholders::_1));
 
             m_SetModeClientWaiting = true;
-            m_SetModeClientTimeSent = m_Node->now().seconds();
+            m_SetModeClientTimeSent = GetNode()->now().seconds();
         }
     }
-    else if (m_SetModeClientWaiting && m_SetModeClientTimeSent + 5 < m_Node->now().seconds())
+    else if (
+        m_SetModeClientWaiting && m_SetModeClientTimeSent + 5 < GetNode()->now().seconds())
     {
-        RCLCPP_INFO(m_Node->get_logger(), "SetMode Service didn't respond in 5 seconds");
+        RCLCPP_INFO(GetNode()->get_logger(), "SetMode Service didn't respond in 5 seconds");
         m_SetModeClientWaiting = false;
     }
 
-    rclcpp::spin_some(m_Node);
+    rclcpp::spin_some(GetNode());
 }

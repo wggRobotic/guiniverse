@@ -36,7 +36,7 @@ void DataCaptureSystem::ImGuiPanels()
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
 
-    for (int i = 0; i < m_Sections.size(); i++)
+    for (unsigned i = 0; i < m_Sections.size(); i++)
     {
         if (ImGui::Begin(m_Sections.at(i).SectionName.c_str()))
         {

@@ -1,6 +1,6 @@
+#include <GL/gl.h>
 #include <guiniverse/image_system/image_system.hpp>
 #include <imgui.h>
-#include <GL/gl.h>
 
 #define GLCALL(call)                                                                              \
     do                                                                                            \
@@ -129,11 +129,11 @@ ImageSystem::~ImageSystem()
 {
     for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
-        m_ImageProcessors[i]->Addons.thread_should_close.store(true);
-        if (m_ImageProcessors[i]->Addons.thread.joinable())
-            m_ImageProcessors[i]->Addons.thread.join();
+        m_ImageProcessors[i]->Addons.ThreadShouldClose.store(true);
+        if (m_ImageProcessors[i]->Addons.Thread.joinable())
+            m_ImageProcessors[i]->Addons.Thread.join();
 
-        quirc_destroy(m_ImageProcessors[i]->Addons.qrcode.quirc_instance);
+        quirc_destroy(m_ImageProcessors[i]->Addons.QRCode.QuircInstance);
     }
 }
 
@@ -145,17 +145,17 @@ int ImageSystem::AddImageProcessor(const std::string& imgui_panel_name)
 
     m_ImageProcessors[size]->ImGuiPanelName = imgui_panel_name;
 
-    m_ImageProcessors[size]->Addons.qrcode.quirc_instance = quirc_new();
-    m_ImageProcessors[size]->Addons.qrcode.publisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
+    m_ImageProcessors[size]->Addons.QRCode.QuircInstance = quirc_new();
+    m_ImageProcessors[size]->Addons.QRCode.Publisher = m_Node->create_publisher<std_msgs::msg::String>("qrcode", 10);
 
-    m_ImageProcessors[size]->Addons.thread = std::thread(&ImageSystem::AddOnThreadFunction, this, size);
+    m_ImageProcessors[size]->Addons.Thread = std::thread(&ImageSystem::AddOnThreadFunction, this, size);
 
     return size;
 }
 
 void ImageSystem::AddOnThreadFunction(int index)
 {
-    while (!m_ImageProcessors[index]->Addons.thread_should_close.load())
+    while (!m_ImageProcessors[index]->Addons.ThreadShouldClose.load())
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -163,39 +163,39 @@ void ImageSystem::AddOnThreadFunction(int index)
         m_ImageProcessors[index]->Image.CopyImage(image);
 
         // qrcode
-        if (m_ImageProcessors[index]->Addons.flags.load() & ImageSystemAddOn_QRCode
+        if (m_ImageProcessors[index]->Addons.Flags.load() & ImageSystemAddOn_QRCode
             && !image.empty())
         {
             cv::Mat grayscale;
             cv::cvtColor(image, grayscale, cv::COLOR_RGB2GRAY);
 
             quirc_resize(
-                m_ImageProcessors[index]->Addons.qrcode.quirc_instance,
+                m_ImageProcessors[index]->Addons.QRCode.QuircInstance,
                 image.cols,
                 image.rows);
 
             int width, height;
             uint8_t* qr_image = quirc_begin(
-                m_ImageProcessors[index]->Addons.qrcode.quirc_instance,
+                m_ImageProcessors[index]->Addons.QRCode.QuircInstance,
                 &width,
                 &height);
             memcpy(qr_image, grayscale.data, width * height);
-            quirc_end(m_ImageProcessors[index]->Addons.qrcode.quirc_instance);
+            quirc_end(m_ImageProcessors[index]->Addons.QRCode.QuircInstance);
 
-            int count = quirc_count(m_ImageProcessors[index]->Addons.qrcode.quirc_instance);
+            int count = quirc_count(m_ImageProcessors[index]->Addons.QRCode.QuircInstance);
 
             for (int i = 0; i < count; i++)
             {
                 struct quirc_code code;
                 struct quirc_data data;
 
-                quirc_extract(m_ImageProcessors[index]->Addons.qrcode.quirc_instance, i, &code);
+                quirc_extract(m_ImageProcessors[index]->Addons.QRCode.QuircInstance, i, &code);
 
                 if (quirc_decode(&code, &data) == QUIRC_SUCCESS)
                 {
                     std_msgs::msg::String msg;
                     msg.data = std::string((char*) data.payload);
-                    m_ImageProcessors[index]->Addons.qrcode.publisher->publish(msg);
+                    m_ImageProcessors[index]->Addons.QRCode.Publisher->publish(msg);
                 }
             }
         }
@@ -204,7 +204,7 @@ void ImageSystem::AddOnThreadFunction(int index)
 
 void ImageSystem::ImageCallback(int index, cv::Mat& image)
 {
-    int addon_flags = m_ImageProcessors[index]->Addons.flags.load();
+    int addon_flags = m_ImageProcessors[index]->Addons.Flags.load();
 
     cv::Mat old_image;
     if (addon_flags & ImageSystemAddOn_Diff)
@@ -217,7 +217,7 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
         cv::Mat diff_image;
         cv::absdiff(image, old_image, diff_image);
 
-        m_ImageProcessors[index]->Addons.diff.image.SubImageTransferOwnership(diff_image);
+        m_ImageProcessors[index]->Addons.Diff.Image.SubImageTransferOwnership(diff_image);
     }
 
     if (addon_flags & ImageSystemAddon_GrayScale)
@@ -228,7 +228,7 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
         cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
         cv::cvtColor(grayscale, grayscale_rgb, cv::COLOR_GRAY2BGR);
 
-        m_ImageProcessors[index]->Addons.grayscale.image.SubImageTransferOwnership(grayscale_rgb);
+        m_ImageProcessors[index]->Addons.Grayscale.Image.SubImageTransferOwnership(grayscale_rgb);
     }
 }
 
@@ -237,8 +237,8 @@ void ImageSystem::OnGuiStartup()
     for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->Image.CreateTexture();
-        m_ImageProcessors[i]->Addons.diff.image.CreateTexture();
-        m_ImageProcessors[i]->Addons.grayscale.image.CreateTexture();
+        m_ImageProcessors[i]->Addons.Diff.Image.CreateTexture();
+        m_ImageProcessors[i]->Addons.Grayscale.Image.CreateTexture();
     }
 }
 
@@ -247,8 +247,8 @@ void ImageSystem::OnGuiShutdown()
     for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->Image.DestroyTexture();
-        m_ImageProcessors[i]->Addons.diff.image.DestroyTexture();
-        m_ImageProcessors[i]->Addons.grayscale.image.DestroyTexture();
+        m_ImageProcessors[i]->Addons.Diff.Image.DestroyTexture();
+        m_ImageProcessors[i]->Addons.Grayscale.Image.DestroyTexture();
     }
 }
 
@@ -256,7 +256,7 @@ void ImageSystem::OnGuiFrame()
 {
     for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
-        int addon_flags = m_ImageProcessors[i]->Addons.flags.load();
+        int addon_flags = m_ImageProcessors[i]->Addons.Flags.load();
         bool qrcode_addon = (addon_flags & ImageSystemAddOn_QRCode ? true : false);
         bool diff_addon = (addon_flags & ImageSystemAddOn_Diff ? true : false);
         bool grayscale_addon = (addon_flags & ImageSystemAddon_GrayScale ? true : false);
@@ -278,10 +278,9 @@ void ImageSystem::OnGuiFrame()
 
         if (addon_flags & ImageSystemAddOn_Diff)
         {
-            if (ImGui::Begin(
-                    (m_ImageProcessors[i]->ImGuiPanelName + " - diff").c_str()))
+            if (ImGui::Begin((m_ImageProcessors[i]->ImGuiPanelName + " - diff").c_str()))
             {
-                m_ImageProcessors[i]->Addons.diff.image.ImGuiImage(
+                m_ImageProcessors[i]->Addons.Diff.Image.ImGuiImage(
                     m_ImageProcessors[i]->FlipVertically,
                     m_ImageProcessors[i]->FlipHorizontally);
             }
@@ -293,13 +292,13 @@ void ImageSystem::OnGuiFrame()
             if (ImGui::Begin(
                     (m_ImageProcessors[i]->ImGuiPanelName + " - grayscale").c_str()))
             {
-                m_ImageProcessors[i]->Addons.grayscale.image.ImGuiImage(
+                m_ImageProcessors[i]->Addons.Grayscale.Image.ImGuiImage(
                     m_ImageProcessors[i]->FlipVertically,
                     m_ImageProcessors[i]->FlipHorizontally);
             }
             ImGui::End();
         }
 
-        m_ImageProcessors[i]->Addons.flags.store((qrcode_addon ? ImageSystemAddOn_QRCode : 0) | (diff_addon ? ImageSystemAddOn_Diff : 0) | (grayscale_addon ? ImageSystemAddon_GrayScale : 0));
+        m_ImageProcessors[i]->Addons.Flags.store((qrcode_addon ? ImageSystemAddOn_QRCode : 0) | (diff_addon ? ImageSystemAddOn_Diff : 0) | (grayscale_addon ? ImageSystemAddon_GrayScale : 0));
     }
 }

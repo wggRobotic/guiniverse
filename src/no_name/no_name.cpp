@@ -17,25 +17,26 @@ NoName::~NoName()
 
 void NoName::OnStartup()
 {
-    for (int i = 0; i < m_Wheels.size(); i++)
+    for (unsigned i = 0; i < m_Wheels.size(); i++)
     {
         m_Wheels[i].TargetRPM = 0.f;
         m_Wheels[i].LastRPM = 0.f;
     }
 
-    m_RPMPublisher = m_Node->create_publisher<std_msgs::msg::Float32MultiArray>("set_motor_rpm", 10);
-    m_TurtleTwistPublisher = m_Node->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
+    m_RPMPublisher = GetNode()->create_publisher<std_msgs::msg::Float32MultiArray>("set_motor_rpm", 10);
+    m_TurtleTwistPublisher = GetNode()->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
-    m_SetModeClient = m_Node->create_client<edu_robot::srv::SetMode>("set_mode");
+    constexpr auto srv_name = "set_mode";
+    m_SetModeClient = GetNode()->create_client<edu_robot::srv::SetMode>(srv_name);
 
-    m_ImageSystem = std::make_shared<ImageSystem>(m_Node);
+    m_ImageSystem = std::make_shared<ImageSystem>(GetNode());
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
     m_ImageSystemBackendGST->AddSink(7000);
     m_ImageSystemBackendGST->AddSink(7001);
     m_ImageSystemBackendGST->AddSink(7002);
 
-    m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(m_Node);
+    m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(GetNode());
     m_DataCaptureSystem->AddSection("QRCodes", "qrcode");
 }
 
@@ -63,7 +64,9 @@ void NoName::AddWheel(float x, float y, float radius, bool invert)
 
 void NoName::SetModeClientCallback(rclcpp::Client<edu_robot::srv::SetMode>::SharedFuture response)
 {
-    RCLCPP_INFO(m_Node->get_logger(), "SetMode service responded");
+    (void) response;
+
+    RCLCPP_INFO(GetNode()->get_logger(), "SetMode service responded");
 
     m_SetModeClientWaiting = false;
 }

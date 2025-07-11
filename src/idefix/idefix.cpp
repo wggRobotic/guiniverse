@@ -5,10 +5,6 @@ Idefix::Idefix()
 {
 }
 
-Idefix::~Idefix()
-{
-}
-
 void Idefix::OnStartup()
 {
     m_IMUSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("imu", 10, std::bind(&Idefix::IMUCallback, this, std::placeholders::_1));

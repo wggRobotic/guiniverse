@@ -10,7 +10,7 @@ void JoystickInput::ImGuiPanel(const char* label)
         return;
     }
 
-    if (ImGui::BeginCombo("select joystick", glfwGetJoystickName(m_SelectedJoystick)))
+    if (ImGui::BeginCombo("select joystick", m_SelectedJoystick == -1 ? "no joystick selected" : glfwGetJoystickName(m_SelectedJoystick)))
     {
         if (ImGui::Selectable("no joystick selected", m_SelectedJoystick == -1))
         {
