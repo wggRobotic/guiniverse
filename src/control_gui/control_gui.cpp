@@ -1,59 +1,60 @@
 #include <guiniverse/control_gui/control_gui.hpp>
 #include <thread>
 
-ControlGui::ControlGui(int RobotControllerRefreshRate)
-    : m_RosRate(RobotControllerRefreshRate)
+ControlGui::ControlGui(int robot_controller_refresh_rate)
+    : m_RosRate(robot_controller_refresh_rate)
 {
     // m_Console.Init();
 }
 
-void ControlGui::addController(std::shared_ptr<RobotController> Controller)
+void ControlGui::AddController(std::shared_ptr<RobotController> controller)
 {
-    if (Controller == NULL)
+    if (!controller)
         return;
 
-    m_Controllers.push_back(Controller);
+    m_Controllers.push_back(controller);
 }
 
-void ControlGui::run()
+void ControlGui::Run()
 {
-    m_Running.store(true);
-    m_RobotSelected.store(NO_ROBOT_SELECTED);
+    m_Running = true;
+    m_RobotSelected = NO_ROBOT_SELECTED;
 
-    std::thread robot_controller_thread(&ControlGui::RobotControllerThreadFunction, this);
+    std::thread robot_controller_thread(
+        [this] { ControlGui::RobotControllerThreadFunction(); });
 
     GuiFunction();
 
     robot_controller_thread.join();
 }
 
-void ControlGui::stop()
+void ControlGui::Stop()
 {
-    m_Running.store(false);
+    m_Running = false;
 }
 
 void ControlGui::RobotControllerThreadFunction()
 {
-    int robot_selected = NO_ROBOT_SELECTED;
+    auto robot_selected = NO_ROBOT_SELECTED;
 
-    while (m_Running.load())
+    while (m_Running)
     {
-        if (m_ChangeState.load())
+        if (m_ChangeState)
         {
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->_onShutdown();
+                m_Controllers.at(robot_selected)->shutdown();
 
-            robot_selected = m_RobotSelected.load();
+            robot_selected = m_RobotSelected;
 
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->_onStartup();
+                m_Controllers.at(robot_selected)->start();
 
-            m_ChangeState.store(false);
+            m_ChangeState = false;
         }
 
         if (robot_selected != NO_ROBOT_SELECTED)
         {
-            m_Controllers.at(robot_selected)->onFrame();
+            m_Controllers.at(robot_selected)->OnFrame();
         }
 
         m_RosRate.sleep();

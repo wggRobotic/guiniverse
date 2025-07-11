@@ -2,11 +2,10 @@
 
 #include <atomic>
 #include <mutex>
-#include <string>
 #include <thread>
 #include <vector>
 
-class Console
+class Console final
 {
 public:
     Console();
@@ -15,10 +14,14 @@ public:
     void Init();
     void ImGuiPanel();
 
+protected:
+    void CaptureOutput();
+
 private:
-    static void CaptureOutput();
-    static int pipe_fd[2]; // Pipe for redirection
-    static std::thread capture_thread;
-    static std::atomic<bool> running;
-    static bool auto_scroll;
+    std::vector<std::string> m_LogLines;
+    std::mutex m_LogMutex;
+    int m_PipeFd[2];
+    std::thread m_CaptureThread;
+    std::atomic<bool> m_Running;
+    bool m_AutoScroll;
 };

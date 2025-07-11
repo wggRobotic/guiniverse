@@ -1,10 +1,10 @@
 #include <guiniverse/idefix/idefix.hpp>
 
-void Idefix::onFrame()
+void Idefix::OnFrame()
 {
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(GetNode());
 
-    m_ImageSystemBackendGST->onFrame();
+    m_ImageSystemBackendGST->OnFrame();
 
     float lin_x = 0.f;
     float lin_y = 0.f;
@@ -36,5 +36,5 @@ void Idefix::onFrame()
     }
     m_TwistPublisher->publish(m_TwistMessage);
 
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(GetNode());
 }

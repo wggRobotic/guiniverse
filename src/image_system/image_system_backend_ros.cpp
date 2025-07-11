@@ -9,25 +9,25 @@ ImageSystemBackendROS::~ImageSystemBackendROS()
 {
 }
 
-#define MAKE_CALLBACK(INDEX)                                                \
-    [this, INDEX](const sensor_msgs::msg::Image::ConstSharedPtr& msg)       \
-    {                                                                       \
-        cv::Mat image_mat(                                                  \
-            (int) msg->width,                                               \
-            (int) msg->height,                                              \
-            CV_8UC3,                                                        \
-            (void*) msg->data.data());                                      \
-        m_ImageSystem->ImageCallback(m_Processors[INDEX].index, image_mat); \
-    }
-
-void ImageSystemBackendROS::addSubscriber(const std::string& topic_name)
+void ImageSystemBackendROS::AddSubscriber(const std::string& topic_name)
 {
     int size = m_Processors.size();
     m_Processors.resize(size + 1);
 
-    m_Processors[size].topic_name = topic_name;
+    m_Processors[size].TopicName = topic_name;
+
+    auto callback = [&](const sensor_msgs::msg::Image::ConstSharedPtr& msg)
+    {
+        std::vector buffer = msg->data;
+        cv::Mat image(
+            static_cast<int>(msg->width),
+            static_cast<int>(msg->height),
+            CV_8UC3,
+            buffer.data());
+        m_ImageSystem->ImageCallback(m_Processors[size].Index, image);
+    };
 
     image_transport::TransportHints transport_hints(m_Node.get(), "compressed");
-    m_Processors[size].subscriber = m_ImageTransport->subscribe(topic_name, 10, MAKE_CALLBACK(size), nullptr, &transport_hints);
-    m_Processors[size].index = m_ImageSystem->addImageProcessor("Ros2 topic " + topic_name);
+    m_Processors[size].Subscriber = m_ImageTransport->subscribe(topic_name, 10, callback, nullptr, &transport_hints);
+    m_Processors[size].Index = m_ImageSystem->AddImageProcessor("Ros2 topic " + topic_name);
 }

@@ -1,44 +1,43 @@
 #pragma once
 
-#include <atomic>
 #include <edu_robot/srv/set_mode.hpp>
 #include <geometry_msgs/msg/twist.hpp>
-#include <guiniverse/control_gui/robot_controller.hpp>
 #include <guiniverse/data_capture_system.hpp>
 #include <guiniverse/image_system/image_system_backend_gst.hpp>
+#include <guiniverse/robot_controller.hpp>
 #include <mutex>
 #include <std_msgs/msg/float32_multi_array.hpp>
 #include <vector>
 
-struct ExplorerWheel
+struct ExplorerWheel final
 {
-    float x = 0.f;
-    float y = 0.f;
-    float radius = 0.f;
-    bool invert = false;
+    float X = 0.f;
+    float Y = 0.f;
+    float Radius = 0.f;
+    bool Invert = false;
 
-    float target_rpm = 0.f;
-    float last_rpm = 0.f;
+    float TargetRPM = 0.f;
+    float LastRPM = 0.f;
 };
 
-class NoName : public RobotController
+class NoName final : public RobotController
 {
 public:
     NoName();
     ~NoName();
 
-    void onFrame() override;
-    void onStartup() override;
-    void onShutdown() override;
+    void OnFrame() override;
+    void OnStartup() override;
+    void OnShutdown() override;
 
-    void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
-    void onGuiStartup() override;
-    void onGuiShutdown() override;
+    void OnGuiFrame(GLFWwindow* window, JoystickInput& input) override;
+    void OnGuiStartup() override;
+    void OnGuiShutdown() override;
 
     void SetModeClientCallback(rclcpp::Client<edu_robot::srv::SetMode>::SharedFuture response);
 
 private:
-    void addWheel(float x, float y, float radius, bool invert);
+    void AddWheel(float x, float y, float radius, bool invert);
 
     std::shared_ptr<ImageSystem> m_ImageSystem;
     std::shared_ptr<ImageSystemBackendGST> m_ImageSystemBackendGST;
@@ -52,16 +51,16 @@ private:
 
     struct
     {
-        ImVec2 main_axes = ImVec2(0.f, 0.f);
-        float scalar = 0.5f;
-        float joystick_scalar = 0.5f;
+        ImVec2 MainAxes = ImVec2(0.f, 0.f);
+        float Scalar = 0.5f;
+        float JoystickScalar = 0.5f;
 
-        bool gas_button = false;
+        bool GasButton = false;
 
-        bool enable_button = false;
-        bool disable_button = false;
-        bool enable_button_physical = false;
-        bool disable_button_physical = false;
+        bool EnableButton = false;
+        bool DisableButton = false;
+        bool EnableButtonPhysical = false;
+        bool DisableButtonPhysical = false;
     } m_Input;
 
     // ros2

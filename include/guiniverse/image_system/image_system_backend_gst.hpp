@@ -5,29 +5,28 @@
 #include <guiniverse/image_system/image_system.hpp>
 #include <vector>
 
-struct ImageSystemBackendGSTProcessor
+struct ImageSystemBackendGSTProcessor final
 {
-    int index;
+    int Index;
+    short Port;
 
-    short port;
+    GstElement* Pipeline;
+    GstElement* AppSink;
+    GstAppSink* Sink;
 
-    GstElement* pipeline;
-    GstElement* appsink;
-    GstAppSink* sink;
-
-    GstClockTime last_frame_timestamp;
+    GstClockTime LastFrameTimestamp;
 };
 
-class ImageSystemBackendGST : public ImageSystemBackend
+class ImageSystemBackendGST final : public ImageSystemBackend
 {
 public:
     ImageSystemBackendGST(std::shared_ptr<ImageSystem> image_system);
 
     ~ImageSystemBackendGST();
 
-    void onFrame();
+    void OnFrame();
 
-    void addSink(short port);
+    void AddSink(short port);
 
 private:
     std::vector<ImageSystemBackendGSTProcessor> m_Processors;

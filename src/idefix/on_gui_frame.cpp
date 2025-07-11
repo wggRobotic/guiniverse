@@ -1,17 +1,17 @@
 #include <guiniverse/idefix/idefix.hpp>
 #include <guiniverse/imgui_util.hpp>
 
-void Idefix::onGuiStartup()
+void Idefix::OnGuiStartup()
 {
-    m_ImageSystem->onGuiStartup();
+    m_ImageSystem->OnGuiStartup();
 }
 
-void Idefix::onGuiShutdown()
+void Idefix::OnGuiShutdown()
 {
-    m_ImageSystem->onGuiShutdown();
+    m_ImageSystem->OnGuiShutdown();
 }
 
-void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
+void Idefix::OnGuiFrame(GLFWwindow* window, JoystickInput& input)
 {
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
@@ -20,21 +20,17 @@ void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 
         m_Input.gas_button = false;
 
-        auto device_name = input.getDeviceName();
-
-        if (device_name == "Logitech Logitech Extreme 3D")
-        {
-            m_Input.main_axes = ImVec2(input.getAxis(0), input.getAxis(1));
-
-            float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
-            if (new_joystick_scalar != m_Input.joystick_scalar)
-            {
-                m_Input.joystick_scalar = new_joystick_scalar;
-                m_Input.scalar = new_joystick_scalar;
-            }
-
-            m_Input.gas_button |= input.getButton(0);
-        }
+        // if (device_name == "Logitech Logitech Extreme 3D")
+        // {
+        //     m_Input.main_axes = ImVec2(input.GetAxis(0), input.GetAxis(1));
+        //     float new_joystick_scalar = input.GetAxis(3) / 2.f + 0.5f;
+        //     if (new_joystick_scalar != m_Input.joystick_scalar)
+        //     {
+        //         m_Input.joystick_scalar = new_joystick_scalar;
+        //         m_Input.scalar = new_joystick_scalar;
+        //     }
+        //     m_Input.gas_button |= input.GetButton(0);
+        // }
 
         if (glfwGetKey(window, GLFW_KEY_A))
             m_Input.main_axes.x = 1.f;
@@ -98,6 +94,6 @@ void Idefix::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     }
     ImGui::End();
 
-    m_ImageSystem->onGuiFrame();
+    m_ImageSystem->OnGuiFrame();
     m_DataCaptureSystem->ImGuiPanels();
 }

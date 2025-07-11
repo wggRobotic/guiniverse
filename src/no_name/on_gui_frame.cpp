@@ -1,17 +1,17 @@
 #include <guiniverse/imgui_util.hpp>
 #include <guiniverse/no_name/no_name.hpp>
 
-void NoName::onGuiStartup()
+void NoName::OnGuiStartup()
 {
     m_ImageSystem->onGuiStartup();
 }
 
-void NoName::onGuiShutdown()
+void NoName::OnGuiShutdown()
 {
     m_ImageSystem->onGuiShutdown();
 }
 
-void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
+void NoName::OnGuiFrame(GLFWwindow* window, JoystickInput& input)
 {
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
@@ -23,23 +23,23 @@ void NoName::onGuiFrame(GLFWwindow* window, JoystickInput& input)
 
         m_Input.gas_button = false;
 
-        auto device_name = input.getDeviceName();
+        auto device_name = input.GetJoystickName();
 
         if (device_name == "Logitech Logitech Extreme 3D")
         {
-            m_Input.main_axes = ImVec2(input.getAxis(0), input.getAxis(1));
+            m_Input.main_axes = ImVec2(input.GetAxis(0), input.GetAxis(1));
 
-            float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
+            float new_joystick_scalar = input.GetAxis(3) / 2.f + 0.5f;
             if (new_joystick_scalar != m_Input.joystick_scalar)
             {
                 m_Input.joystick_scalar = new_joystick_scalar;
                 m_Input.scalar = new_joystick_scalar;
             }
 
-            m_Input.gas_button |= input.getButton(0);
+            m_Input.gas_button |= input.GetButton(0);
 
-            m_Input.enable_button_physical |= input.getButton(10);
-            m_Input.disable_button_physical |= input.getButton(11);
+            m_Input.enable_button_physical |= input.GetButton(10);
+            m_Input.disable_button_physical |= input.GetButton(11);
         }
 
         if (glfwGetKey(window, GLFW_KEY_A))

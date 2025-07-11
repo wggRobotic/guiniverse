@@ -2,26 +2,26 @@
 
 #include <atomic>
 #include <geometry_msgs/msg/twist.hpp>
-#include <guiniverse/control_gui/robot_controller.hpp>
 #include <guiniverse/data_capture_system.hpp>
 #include <guiniverse/image_system/image_system_backend_gst.hpp>
+#include <guiniverse/robot_controller.hpp>
 #include <mutex>
 #include <std_msgs/msg/float32.hpp>
 #include <std_msgs/msg/float32_multi_array.hpp>
 
-class Idefix : public RobotController
+class Idefix final : public RobotController
 {
 public:
     Idefix();
     ~Idefix();
 
-    void onFrame() override;
-    void onStartup() override;
-    void onShutdown() override;
+    void OnFrame() override;
+    void OnStartup() override;
+    void OnShutdown() override;
 
-    void onGuiFrame(GLFWwindow* window, JoystickInput& input) override;
-    void onGuiStartup() override;
-    void onGuiShutdown() override;
+    void OnGuiFrame(GLFWwindow* window, JoystickInput& input) override;
+    void OnGuiStartup() override;
+    void OnGuiShutdown() override;
 
     void IMUCallback(const std_msgs::msg::Float32::SharedPtr msg);
 

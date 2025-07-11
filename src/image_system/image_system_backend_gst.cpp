@@ -8,18 +8,18 @@ ImageSystemBackendGST::ImageSystemBackendGST(std::shared_ptr<ImageSystem> image_
 
 ImageSystemBackendGST::~ImageSystemBackendGST()
 {
-    for (int i = 0; i < m_Processors.size(); i++)
+    for (unsigned i = 0; i < m_Processors.size(); i++)
     {
-        gst_element_set_state(m_Processors[i].pipeline, GST_STATE_NULL);
-        gst_object_unref(m_Processors[i].pipeline);
+        gst_element_set_state(m_Processors[i].Pipeline, GST_STATE_NULL);
+        gst_object_unref(m_Processors[i].Pipeline);
     }
 }
 
-void ImageSystemBackendGST::onFrame()
+void ImageSystemBackendGST::OnFrame()
 {
-    for (int i = 0; i < m_Processors.size(); i++)
+    for (unsigned i = 0; i < m_Processors.size(); i++)
     {
-        GstSample* sample = gst_app_sink_try_pull_sample(m_Processors[i].sink, 0);
+        GstSample* sample = gst_app_sink_try_pull_sample(m_Processors[i].Sink, 0);
 
         if (sample)
         {
@@ -31,7 +31,7 @@ void ImageSystemBackendGST::onFrame()
 
                 GstClockTime timestamp = GST_BUFFER_PTS(buffer);
 
-                if (caps && (timestamp != m_Processors[i].last_frame_timestamp))
+                if (caps && (timestamp != m_Processors[i].LastFrameTimestamp))
                 {
                     GstStructure* structure = gst_caps_get_structure(caps, 0);
 
@@ -50,8 +50,8 @@ void ImageSystemBackendGST::onFrame()
                                     width,
                                     CV_8UC3,
                                     (void*) map.data);
-                                m_ImageSystem->ImageCallback(m_Processors[i].index, image_mat);
-                                m_Processors[i].last_frame_timestamp = timestamp;
+                                m_ImageSystem->ImageCallback(m_Processors[i].Index, image_mat);
+                                m_Processors[i].LastFrameTimestamp = timestamp;
 
                                 gst_buffer_unmap(buffer, &map);
                             }
@@ -65,31 +65,31 @@ void ImageSystemBackendGST::onFrame()
     }
 }
 
-void ImageSystemBackendGST::addSink(short port)
+void ImageSystemBackendGST::AddSink(short port)
 {
     int size = m_Processors.size();
     m_Processors.resize(size + 1);
 
-    m_Processors[size].port = port;
+    m_Processors[size].Port = port;
 
     std::string sink_name = "sink" + std::to_string(size);
     std::string launch_string = "udpsrc port=" + std::to_string(port) + " buffer-size=1000000 ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! avdec_h264 low-latency=true ! videoconvert ! video/x-raw,format=RGB ! appsink name=" + sink_name + " max-buffers=1 drop=true";
 
     printf(launch_string.c_str());
 
-    m_Processors[size].pipeline = gst_parse_launch(launch_string.c_str(), NULL);
+    m_Processors[size].Pipeline = gst_parse_launch(launch_string.c_str(), NULL);
 
-    if (!m_Processors.at(size).pipeline)
+    if (!m_Processors.at(size).Pipeline)
     {
         printf("Failed to create pipeline\n");
     }
 
-    m_Processors[size].appsink = gst_bin_get_by_name(
-        GST_BIN(m_Processors[size].pipeline),
+    m_Processors[size].AppSink = gst_bin_get_by_name(
+        GST_BIN(m_Processors[size].Pipeline),
         sink_name.c_str());
-    m_Processors[size].sink = GST_APP_SINK(m_Processors[size].appsink);
+    m_Processors[size].Sink = GST_APP_SINK(m_Processors[size].AppSink);
 
-    gst_element_set_state(m_Processors[size].pipeline, GST_STATE_PLAYING);
+    gst_element_set_state(m_Processors[size].Pipeline, GST_STATE_PLAYING);
 
-    m_Processors[size].index = m_ImageSystem->addImageProcessor("GStreamer sink on UDP port " + std::to_string(port));
+    m_Processors[size].Index = m_ImageSystem->AddImageProcessor("GStreamer sink on UDP port " + std::to_string(port));
 }

@@ -11,60 +11,60 @@ N10::N10()
 
     m_Wheels.reserve(6);
 
-    addWheel(0.152f, 0.105f, 0.055f, true);    // 0
-    addWheel(0.152f, -0.105f, 0.055f, false);  // 1
-    addWheel(0.0, 0.105f, 0.052f, true);       // 2
-    addWheel(0.0f, -0.105f, 0.052f, false);    // 3
-    addWheel(-0.152f, 0.105f, 0.055f, true);   // 4
-    addWheel(-0.152f, -0.105f, 0.055f, false); // 5
+    AddWheel(0.152f, 0.105f, 0.055f, true);    // 0
+    AddWheel(0.152f, -0.105f, 0.055f, false);  // 1
+    AddWheel(0.0, 0.105f, 0.052f, true);       // 2
+    AddWheel(0.0f, -0.105f, 0.052f, false);    // 3
+    AddWheel(-0.152f, 0.105f, 0.055f, true);   // 4
+    AddWheel(-0.152f, -0.105f, 0.055f, false); // 5
 }
 
 N10::~N10()
 {
 }
 
-void N10::onStartup()
+void N10::OnStartup()
 {
     for (int i = 0; i < m_Wheels.size(); i++)
     {
-        m_Wheels[i].target_rpm = 0.f;
-        m_Wheels[i].target_angle = 0.f;
-        m_Wheels[i].last_rpm = 0.f;
-        m_Wheels[i].last_angle = 0.f;
+        m_Wheels[i].TargetRPM = 0.f;
+        m_Wheels[i].TargetAngle = 0.f;
+        m_Wheels[i].LastRPM = 0.f;
+        m_Wheels[i].LastAngle = 0.f;
     }
 
     m_EnableMotorClientWaiting = false;
 
-    m_WheelsRPMFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
-    m_WheelsAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
-    m_GripperAngleFeedbackSubscriber = node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
-    m_GripperDistanceSensorSubscriber = node->create_subscription<std_msgs::msg::Float32>("gripper/distance_sensor", 10, std::bind(&N10::GripperDistanceSensorCallback, this, std::placeholders::_1));
+    m_WheelsRPMFeedbackSubscriber = m_Node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/rpm/feedback", 10, std::bind(&N10::WheelsRPMFeedbackCallback, this, std::placeholders::_1));
+    m_WheelsAngleFeedbackSubscriber = m_Node->create_subscription<std_msgs::msg::Float32MultiArray>("wheels/angle/feedback", 10, std::bind(&N10::WheelsAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperAngleFeedbackSubscriber = m_Node->create_subscription<std_msgs::msg::Float32MultiArray>("gripper/angle/feedback", 10, std::bind(&N10::GripperAngleFeedbackCallback, this, std::placeholders::_1));
+    m_GripperDistanceSensorSubscriber = m_Node->create_subscription<std_msgs::msg::Float32>("gripper/distance_sensor", 10, std::bind(&N10::GripperDistanceSensorCallback, this, std::placeholders::_1));
 
-    m_VoltagePowerManagementSubscriber = node->create_subscription<std_msgs::msg::Float32>("voltagePwrMgmt", 10, std::bind(&N10::VoltagePowerManagementCallback, this, std::placeholders::_1));
-    m_VoltageAdapterSubscriber = node->create_subscription<std_msgs::msg::Float32>("voltageAdapter", 10, std::bind(&N10::VoltageAdatpterCallback, this, std::placeholders::_1));
+    m_VoltagePowerManagementSubscriber = m_Node->create_subscription<std_msgs::msg::Float32>("voltagePwrMgmt", 10, std::bind(&N10::VoltagePowerManagementCallback, this, std::placeholders::_1));
+    m_VoltageAdapterSubscriber = m_Node->create_subscription<std_msgs::msg::Float32>("voltageAdapter", 10, std::bind(&N10::VoltageAdatpterCallback, this, std::placeholders::_1));
     ;
-    m_WheelsEnabledSubscriber = node->create_subscription<std_msgs::msg::ByteMultiArray>("wheels/enabled", 10, std::bind(&N10::WheelsEnabledCallback, this, std::placeholders::_1));
+    m_WheelsEnabledSubscriber = m_Node->create_subscription<std_msgs::msg::ByteMultiArray>("wheels/enabled", 10, std::bind(&N10::WheelsEnabledCallback, this, std::placeholders::_1));
 
-    m_WheelsRPMPublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
-    m_WheelsAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
-    m_GripperAnglePublisher = node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/angle/cmd", 10);
+    m_WheelsRPMPublisher = m_Node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/rpm/cmd", 10);
+    m_WheelsAnglePublisher = m_Node->create_publisher<std_msgs::msg::Float32MultiArray>("wheels/angle/cmd", 10);
+    m_GripperAnglePublisher = m_Node->create_publisher<std_msgs::msg::Float32MultiArray>("gripper/angle/cmd", 10);
 
-    m_TurtleTwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
+    m_TurtleTwistPublisher = m_Node->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
-    m_EnableMotorClient = node->create_client<std_srvs::srv::SetBool>("wheels/"
+    m_EnableMotorClient = m_Node->create_client<std_srvs::srv::SetBool>("wheels/"
                                                                       "enable");
 
-    m_ImageSystem = std::make_shared<ImageSystem>(node);
+    m_ImageSystem = std::make_shared<ImageSystem>(m_Node);
 
     m_ImageSystemBackendGST = std::make_shared<ImageSystemBackendGST>(m_ImageSystem);
-    m_ImageSystemBackendGST->addSink(5000);
-    m_ImageSystemBackendGST->addSink(5001);
+    m_ImageSystemBackendGST->AddSink(5000);
+    m_ImageSystemBackendGST->AddSink(5001);
 
-    m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
-    m_DataCaptureSystem->addSection("QRCodes", "qrcode");
+    m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(m_Node);
+    m_DataCaptureSystem->AddSection("QRCodes", "qrcode");
 }
 
-void N10::onShutdown()
+void N10::OnShutdown()
 {
     m_WheelsRPMFeedbackSubscriber.reset();
     m_WheelsAngleFeedbackSubscriber.reset();
@@ -88,7 +88,7 @@ void N10::onShutdown()
     m_DataCaptureSystem.reset();
 }
 
-void N10::addWheel(float x, float y, float radius, bool invert)
+void N10::AddWheel(float x, float y, float radius, bool invert)
 {
     std::lock_guard<std::mutex> lock(m_WheelsMutex);
 
@@ -103,7 +103,7 @@ void N10::WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::Shar
 
     if (msg->data.size() == m_Wheels.size())
         for (int i = 0; i < m_Wheels.size(); i++)
-            m_Wheels.at(i).last_rpm = msg->data.at(i);
+            m_Wheels.at(i).LastRPM = msg->data.at(i);
 }
 
 void N10::WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
@@ -112,7 +112,7 @@ void N10::WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::Sh
 
     if (msg->data.size() == m_Wheels.size())
         for (int i = 0; i < m_Wheels.size(); i++)
-            m_Wheels[i].last_angle = msg->data[i];
+            m_Wheels[i].LastAngle = msg->data[i];
 }
 
 void N10::GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg)
@@ -146,7 +146,7 @@ void N10::WheelsEnabledCallback(const std_msgs::msg::ByteMultiArray::SharedPtr m
 void N10::EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response)
 {
     RCLCPP_INFO(
-        node->get_logger(),
+        m_Node->get_logger(),
         "Response: success=%s, message='%s'",
         response.get()->success ? "true" : "false",
         response.get()->message.c_str());

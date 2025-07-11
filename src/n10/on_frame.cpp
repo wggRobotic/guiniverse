@@ -1,10 +1,10 @@
 #include <guiniverse/n10/n10.hpp>
 
-void N10::onFrame()
+void N10::OnFrame()
 {
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(m_Node);
 
-    m_ImageSystemBackendGST->onFrame();
+    m_ImageSystemBackendGST->OnFrame();
 
     struct
     {
@@ -90,25 +90,25 @@ void N10::onFrame()
 
         for (int i = 0; i < m_Wheels.size(); i++)
         {
-            float comp_x = drive_input.lin_x - drive_input.ang * m_Wheels.at(i).y;
-            float comp_y = drive_input.lin_y + drive_input.ang * m_Wheels.at(i).x;
+            float comp_x = drive_input.lin_x - drive_input.ang * m_Wheels.at(i).Y;
+            float comp_y = drive_input.lin_y + drive_input.ang * m_Wheels.at(i).X;
 
             float target_rpm, target_angle;
 
             if (drive_input.gas)
                 target_rpm = 60.f * sqrtf(comp_x * comp_x + comp_y * comp_y)
-                           / (2 * m_Wheels.at(i).radius * M_PI)
-                           * ((comp_x < 0.f) ^ m_Wheels.at(i).invert ? -1.f : 1.f);
+                           / (2 * m_Wheels.at(i).Radius * M_PI)
+                           * ((comp_x < 0.f) ^ m_Wheels.at(i).Invert ? -1.f : 1.f);
             else
                 target_rpm = 0.f;
 
             target_angle = (comp_y == 0.f ? 0.f : (comp_x == 0.f ? M_PI / 2 * (comp_y > 0.f ? 1.f : -1.f) : atanf(comp_y / comp_x)));
 
             m_WheelsRPMMessage.data.at(i) = target_rpm;
-            m_Wheels.at(i).target_rpm = target_rpm;
+            m_Wheels.at(i).TargetRPM = target_rpm;
 
             m_WheelsAngleMessage.data.at(i) = target_angle;
-            m_Wheels.at(i).target_angle = target_angle;
+            m_Wheels.at(i).TargetAngle = target_angle;
         }
     }
     m_WheelsRPMPublisher->publish(m_WheelsRPMMessage);
@@ -117,7 +117,7 @@ void N10::onFrame()
     if (!m_EnableMotorClientWaiting && drive_input.enable_service)
     {
         if (!m_EnableMotorClient->service_is_ready())
-            RCLCPP_WARN(node->get_logger(), "Enable service is not available.");
+            RCLCPP_WARN(m_Node->get_logger(), "Enable service is not available.");
 
         else
         {
@@ -125,21 +125,21 @@ void N10::onFrame()
             request->data = drive_input.enable_service_enable;
 
             if (drive_input.enable_service_enable)
-                RCLCPP_INFO(node->get_logger(), "Enabeling ...");
+                RCLCPP_INFO(m_Node->get_logger(), "Enabeling ...");
             else
-                RCLCPP_INFO(node->get_logger(), "Disabling ...");
+                RCLCPP_INFO(m_Node->get_logger(), "Disabling ...");
 
             m_EnableMotorClient->async_send_request(request, std::bind(&N10::EnableMotorClientCallback, this, std::placeholders::_1));
 
             m_EnableMotorClientWaiting = true;
-            m_EnableMotorClientTimeSent = node->now().seconds();
+            m_EnableMotorClientTimeSent = m_Node->now().seconds();
         }
     }
     else if (
         m_EnableMotorClientWaiting
-        && m_EnableMotorClientTimeSent + 5 < node->now().seconds())
+        && m_EnableMotorClientTimeSent + 5 < m_Node->now().seconds())
     {
-        RCLCPP_INFO(node->get_logger(), "Enable Service didn't respond in 5 seconds");
+        RCLCPP_INFO(m_Node->get_logger(), "Enable Service didn't respond in 5 seconds");
         m_EnableMotorClientWaiting = false;
     }
 
@@ -155,7 +155,7 @@ void N10::onFrame()
         float angles[3];
 
         m_Gripper.inrange = true;
-        if (!calculateGripperAngles(
+        if (!CalculateGripperAngles(
                 m_Gripper.target_x,
                 m_Gripper.target_y,
                 m_Gripper.target_ground_angle,
@@ -217,7 +217,7 @@ void N10::onFrame()
                                         - m_Gripper.current_ground_angle;
                 float new_ground_angle = m_Gripper.current_ground_angle + (0.01f > fabs(ground_angle_diff) ? ground_angle_diff : (ground_angle_diff > 0.f ? 0.01f : -0.01f));
 
-                calculateGripperAngles(new_x, new_y, new_ground_angle, angles);
+                CalculateGripperAngles(new_x, new_y, new_ground_angle, angles);
 
                 m_GripperAngleMessage.data[0] = angles[0];
                 m_GripperAngleMessage.data[1] = angles[1];
@@ -233,10 +233,10 @@ void N10::onFrame()
     if (gripper_input.send_angles)
         m_GripperAnglePublisher->publish(m_GripperAngleMessage);
 
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(m_Node);
 }
 
-bool N10::calculateGripperAngles(float x, float y, float ground_angle, float* result_angles)
+bool N10::CalculateGripperAngles(float x, float y, float ground_angle, float* result_angles)
 {
     bool inrange = true;
 

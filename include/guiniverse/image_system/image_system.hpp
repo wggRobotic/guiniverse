@@ -11,25 +11,25 @@
 #include <thread>
 #include <vector>
 
-struct ImageSystemImage
+struct ImageSystemImage final
 {
-    std::mutex image_mutex;
-    cv::Mat image;
+    std::mutex ImageMutex;
+    cv::Mat Image;
 
-    unsigned int gl_texture;
-    unsigned int texture_width = 0;
-    unsigned int texture_height = 0;
+    unsigned int TextureObject;
+    unsigned int TextureWidth = 0;
+    unsigned int TextureHeight = 0;
 
-    bool dirty = false;
+    bool Dirty = false;
 
-    void clear();
+    void Clear();
 
-    void create_texture();
-    void destroy_texture();
-    void imgui_image(bool flip_vertically, bool flip_horizontally);
+    void CreateTexture();
+    void DestroyTexture();
+    void ImGuiImage(bool flip_vertically, bool flip_horizontally);
 
-    void sub_image_transfer_ownership(cv::Mat& mat);
-    void copy_image(cv::Mat& mat);
+    void SubImageTransferOwnership(cv::Mat& mat);
+    void CopyImage(cv::Mat& mat);
 };
 
 enum ImageSystemAddOn
@@ -40,51 +40,51 @@ enum ImageSystemAddOn
     ImageSystemAddon_GrayScale = 4,
 };
 
-struct ImageSystemImageProcessor
+struct ImageSystemImageProcessor final
 {
     struct
     {
-        std::atomic<int> flags{ ImageSystemAddOn_None };
-        std::thread thread;
-        std::atomic<bool> thread_should_close{ false };
+        std::atomic<int> Flags{ ImageSystemAddOn_None };
+        std::thread Thread;
+        std::atomic<bool> ThreadShouldClose{ false };
 
         struct
         {
-            struct quirc* quirc_instance;
-            rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher;
-        } qrcode;
+            struct quirc* QuircInstance;
+            rclcpp::Publisher<std_msgs::msg::String>::SharedPtr Publisher;
+        } QRCode;
 
         struct
         {
-            ImageSystemImage image;
-        } diff;
+            ImageSystemImage Image;
+        } Diff;
 
         struct
         {
-            ImageSystemImage image;
-        } grayscale;
+            ImageSystemImage Image;
+        } Grayscale;
 
-    } addons;
+    } Addons;
 
-    std::string imgui_panel_name = "none";
+    std::string ImGuiPanelName = "none";
 
-    bool flip_vertically = false;
-    bool flip_horizontally = false;
+    bool FlipVertically = false;
+    bool FlipHorizontally = false;
 
-    ImageSystemImage image;
+    ImageSystemImage Image;
 };
 
-class ImageSystem
+class ImageSystem final
 {
 public:
     ImageSystem(rclcpp::Node::SharedPtr node);
     ~ImageSystem();
 
-    void onGuiStartup();
-    void onGuiFrame();
-    void onGuiShutdown();
+    void OnGuiStartup();
+    void OnGuiFrame();
+    void OnGuiShutdown();
 
-    int addImageProcessor(const std::string& imgui_panel_name);
+    int AddImageProcessor(const std::string& imgui_panel_name);
     void ImageCallback(int index, cv::Mat& image);
 
 private:

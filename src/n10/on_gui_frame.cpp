@@ -2,17 +2,17 @@
 #include <guiniverse/imgui_util.hpp>
 #include <guiniverse/n10/n10.hpp>
 
-void N10::onGuiStartup()
+void N10::OnGuiStartup()
 {
     m_ImageSystem->onGuiStartup();
 }
 
-void N10::onGuiShutdown()
+void N10::OnGuiShutdown()
 {
     m_ImageSystem->onGuiShutdown();
 }
 
-void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
+void N10::OnGuiFrame(GLFWwindow* window, JoystickInput& input)
 {
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
@@ -30,30 +30,30 @@ void N10::onGuiFrame(GLFWwindow* window, JoystickInput& input)
         m_Input.gripper.up_axis = 0.f;
         m_Input.gripper.ground_angle_axis = 0.f;
 
-        auto device_name = input.getDeviceName();
+        auto device_name = input.GetJoystickName();
 
         if (device_name == "Logitech Logitech Extreme 3D")
         {
-            if (input.getButton(8))
+            if (input.GetButton(8))
                 m_GripperMode.store(false);
-            else if (input.getButton(9))
+            else if (input.GetButton(9))
                 m_GripperMode.store(true);
 
-            m_Input.drive.main_axis_x = input.getAxis(0);
-            m_Input.drive.main_axis_y = input.getAxis(1);
+            m_Input.drive.main_axis_x = input.GetAxis(0);
+            m_Input.drive.main_axis_y = input.GetAxis(1);
 
-            float new_joystick_scalar = input.getAxis(3) / 2.f + 0.5f;
+            float new_joystick_scalar = input.GetAxis(3) / 2.f + 0.5f;
             if (new_joystick_scalar != m_Input.drive.scalar_axis_joystick)
             {
                 m_Input.drive.scalar_axis_joystick = new_joystick_scalar;
                 m_Input.drive.scalar_axis = new_joystick_scalar;
             }
 
-            m_Input.drive.gas_button |= input.getButton(0);
-            m_Input.drive.dog_walk_button |= input.getButton(1);
+            m_Input.drive.gas_button |= input.GetButton(0);
+            m_Input.drive.dog_walk_button |= input.GetButton(1);
 
-            m_Input.drive.enable_button_physical |= input.getButton(10);
-            m_Input.drive.disable_button_physical |= input.getButton(11);
+            m_Input.drive.enable_button_physical |= input.GetButton(10);
+            m_Input.drive.disable_button_physical |= input.GetButton(11);
         }
 
         bool key_w = (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);

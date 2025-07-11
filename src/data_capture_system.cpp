@@ -14,7 +14,7 @@ DataCaptureSystem::DataCaptureSystem(std::shared_ptr<rclcpp::Node> Node)
         Callback(INDEX, msg);                                 \
     }
 
-void DataCaptureSystem::addSection(const std::string& Name, const std::string& TopicName)
+void DataCaptureSystem::AddSection(const std::string& Name, const std::string& TopicName)
 {
     std::lock_guard<std::mutex> lock(m_Mutex);
 

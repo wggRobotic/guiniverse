@@ -39,7 +39,7 @@ void ControlGui::GuiFunction()
             while (m_ChangeState.load())
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-            m_Controllers.at(robot_selected)->onGuiStartup();
+            m_Controllers.at(robot_selected)->OnGuiStartup();
         }
     }
 
@@ -65,17 +65,17 @@ void ControlGui::GuiFunction()
             ImGui::Checkbox("Show Styles", &show_styles);
 
             if (ImGui::BeginCombo(
-                    "Select which robot to control",
+                    "select robot",
                     new_robot_selected == NO_ROBOT_SELECTED
-                        ? "No robot selected"
-                        : m_Controllers.at(new_robot_selected)->getRobotName()))
+                        ? "no robot selected"
+                        : m_Controllers.at(new_robot_selected)->GetRobotNameC()))
             {
-                if (ImGui::Selectable("No robot selected", new_robot_selected == NO_ROBOT_SELECTED))
+                if (ImGui::Selectable("no robot selected", new_robot_selected == NO_ROBOT_SELECTED))
                     new_robot_selected = NO_ROBOT_SELECTED;
 
-                for (int i = 0; i < m_Controllers.size(); i++)
+                for (unsigned i = 0; i < m_Controllers.size(); i++)
                 {
-                    if (ImGui::Selectable(m_Controllers.at(i)->getRobotName(), new_robot_selected == i))
+                    if (ImGui::Selectable(m_Controllers.at(i)->GetRobotNameC(), new_robot_selected == static_cast<int>(i)))
                         new_robot_selected = i;
                 }
 
@@ -84,12 +84,11 @@ void ControlGui::GuiFunction()
         }
         ImGui::End();
 
-        m_JoystickInput.update();
         m_JoystickInput.ImGuiPanel("Input");
 
         if (robot_selected != NO_ROBOT_SELECTED)
         {
-            m_Controllers.at(robot_selected)->onGuiFrame(window, m_JoystickInput);
+            m_Controllers.at(robot_selected)->OnGuiFrame(window, m_JoystickInput);
         }
 
         if (show_styles)
@@ -123,7 +122,7 @@ void ControlGui::GuiFunction()
         if (robot_selected != new_robot_selected)
         {
             if (robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(robot_selected)->onGuiShutdown();
+                m_Controllers.at(robot_selected)->OnGuiShutdown();
 
             m_RobotSelected.store(new_robot_selected);
             m_ChangeState.store(true);
@@ -132,14 +131,14 @@ void ControlGui::GuiFunction()
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
             if (new_robot_selected != NO_ROBOT_SELECTED)
-                m_Controllers.at(new_robot_selected)->onGuiStartup();
+                m_Controllers.at(new_robot_selected)->OnGuiStartup();
         }
     }
 
     int robot_selected = m_RobotSelected.load();
     if (robot_selected != NO_ROBOT_SELECTED)
     {
-        m_Controllers.at(robot_selected)->onGuiShutdown();
+        m_Controllers.at(robot_selected)->OnGuiShutdown();
 
         m_RobotSelected.store(NO_ROBOT_SELECTED);
         m_ChangeState.store(true);

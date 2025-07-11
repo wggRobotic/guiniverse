@@ -6,7 +6,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <vector>
 
-struct DataCaptureSystemSection
+struct DataCaptureSystemSection final
 {
     std::string SectionName;
     std::map<std::string, size_t> Data;
@@ -14,12 +14,12 @@ struct DataCaptureSystemSection
     rclcpp::Subscription<std_msgs::msg::String>::SharedPtr Subscriber;
 };
 
-class DataCaptureSystem
+class DataCaptureSystem final
 {
 public:
     DataCaptureSystem(std::shared_ptr<rclcpp::Node> Node);
 
-    void addSection(const std::string& Name, const std::string& TopicName);
+    void AddSection(const std::string& Name, const std::string& TopicName);
 
     void Callback(size_t index, const std_msgs::msg::String::SharedPtr msg);
 

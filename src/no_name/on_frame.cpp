@@ -1,10 +1,10 @@
 #include <guiniverse/no_name/no_name.hpp>
 
-void NoName::onFrame()
+void NoName::OnFrame()
 {
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(m_Node);
 
-    m_ImageSystemBackendGST->onFrame();
+    m_ImageSystemBackendGST->OnFrame();
 
     float lin_x = 0.f;
     float ang = 0.f;
@@ -61,10 +61,10 @@ void NoName::onFrame()
 
         for (int i = 0; i < m_Wheels.size(); i++)
         {
-            m_Wheels[i].target_rpm = 60.f * (lin_x - m_Wheels[i].y * ang)
-                                   / (2.f * m_Wheels[i].radius * M_PI)
-                                   * (m_Wheels[i].invert ? -1.f : 1.f);
-            m_RPMMessage.data[i] = m_Wheels[i].target_rpm;
+            m_Wheels[i].TargetRPM = 60.f * (lin_x - m_Wheels[i].Y * ang)
+                                   / (2.f * m_Wheels[i].Radius * M_PI)
+                                   * (m_Wheels[i].Invert ? -1.f : 1.f);
+            m_RPMMessage.data[i] = m_Wheels[i].TargetRPM;
         }
     }
     m_RPMPublisher->publish(m_RPMMessage);
@@ -72,7 +72,7 @@ void NoName::onFrame()
     if (!m_SetModeClientWaiting && set_mode_service)
     {
         if (!m_SetModeClient->service_is_ready())
-            RCLCPP_WARN(node->get_logger(), "SetMode service is not available.");
+            RCLCPP_WARN(m_Node->get_logger(), "SetMode service is not available.");
 
         else
         {
@@ -80,21 +80,21 @@ void NoName::onFrame()
             request->mode.mode = (set_mode_service_enable ? edu_robot::msg::Mode::REMOTE_CONTROLLED : edu_robot::msg::Mode::INACTIVE);
 
             if (set_mode_service_enable)
-                RCLCPP_INFO(node->get_logger(), "Enabeling ...");
+                RCLCPP_INFO(m_Node->get_logger(), "Enabeling ...");
             else
-                RCLCPP_INFO(node->get_logger(), "Disabling ...");
+                RCLCPP_INFO(m_Node->get_logger(), "Disabling ...");
 
             m_SetModeClient->async_send_request(request, std::bind(&NoName::SetModeClientCallback, this, std::placeholders::_1));
 
             m_SetModeClientWaiting = true;
-            m_SetModeClientTimeSent = node->now().seconds();
+            m_SetModeClientTimeSent = m_Node->now().seconds();
         }
     }
-    else if (m_SetModeClientWaiting && m_SetModeClientTimeSent + 5 < node->now().seconds())
+    else if (m_SetModeClientWaiting && m_SetModeClientTimeSent + 5 < m_Node->now().seconds())
     {
-        RCLCPP_INFO(node->get_logger(), "SetMode Service didn't respond in 5 seconds");
+        RCLCPP_INFO(m_Node->get_logger(), "SetMode Service didn't respond in 5 seconds");
         m_SetModeClientWaiting = false;
     }
 
-    rclcpp::spin_some(node);
+    rclcpp::spin_some(m_Node);
 }

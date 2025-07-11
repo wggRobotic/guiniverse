@@ -20,13 +20,13 @@ int main(int argc, char** argv)
     ControlGui gui(60);
     gui_ptr = &gui;
 
-    rclcpp::on_shutdown([]() { gui_ptr->stop(); });
+    rclcpp::on_shutdown([]() { gui_ptr->Stop(); });
 
-    gui.addController(std::make_shared<N10>());
-    gui.addController(std::make_shared<Idefix>());
-    gui.addController(std::make_shared<NoName>());
+    gui.AddController(std::make_shared<N10>());
+    gui.AddController(std::make_shared<Idefix>());
+    gui.AddController(std::make_shared<NoName>());
 
-    gui.run();
+    gui.Run();
 
     rclcpp::shutdown();
 

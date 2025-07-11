@@ -5,22 +5,22 @@
 #include <rclcpp/rclcpp.hpp>
 #include <vector>
 
-struct ImageSystemBackendROSProcessor
+struct ImageSystemBackendROSProcessor final
 {
-    int index;
+    int Index;
 
-    std::string topic_name;
-    image_transport::Subscriber subscriber;
+    std::string TopicName;
+    image_transport::Subscriber Subscriber;
 };
 
-class ImageSystemBackendROS : public ImageSystemBackend
+class ImageSystemBackendROS final : public ImageSystemBackend
 {
 public:
     ImageSystemBackendROS(std::shared_ptr<ImageSystem> image_system, std::shared_ptr<rclcpp::Node> node);
 
     ~ImageSystemBackendROS();
 
-    void addSubscriber(const std::string& topic_name);
+    void AddSubscriber(const std::string& topic_name);
 
 private:
     std::vector<ImageSystemBackendROSProcessor> m_Processors;

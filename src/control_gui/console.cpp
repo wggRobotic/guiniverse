@@ -1,16 +1,11 @@
-#include <fcntl.h> // For fcntl
+#include <fcntl.h>
 #include <guiniverse/control_gui/console.hpp>
 #include <imgui.h>
-#include <sstream>
-#include <stdio.h>  // For stdout, stderr
-#include <unistd.h> // For pipe, dup2
-
-std::vector<std::string> log_lines;
-std::mutex log_mutex;
-int Console::pipe_fd[2];
-std::thread Console::capture_thread;
-std::atomic<bool> Console::running{ false };
-bool Console::auto_scroll = false;
+#include <mutex>
+#include <stdio.h>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 Console::Console()
 {
@@ -18,66 +13,72 @@ Console::Console()
 
 Console::~Console()
 {
-    running = false;
-    if (capture_thread.joinable())
+    m_Running = false;
+    if (m_CaptureThread.joinable())
     {
-        capture_thread.join();
+        m_CaptureThread.join();
     }
 }
 
 void Console::Init()
 {
-    if (pipe(pipe_fd) == -1)
+    if (pipe(m_PipeFd) == -1)
     {
         perror("pipe failed");
         return;
     }
 
     // Set non-blocking mode
-    fcntl(pipe_fd[0], F_SETFL, O_NONBLOCK);
+    fcntl(m_PipeFd[0], F_SETFL, O_NONBLOCK);
 
     // Redirect stdout and stderr
-    dup2(pipe_fd[1], STDOUT_FILENO);
-    dup2(pipe_fd[1], STDERR_FILENO);
+    dup2(m_PipeFd[1], STDOUT_FILENO);
+    dup2(m_PipeFd[1], STDERR_FILENO);
 
     // Disable buffering for stdout and stderr
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
 
-    running = true;
-    capture_thread = std::thread(CaptureOutput);
+    m_Running = true;
+    m_CaptureThread = std::thread([this] { CaptureOutput(); });
 }
 
 void Console::CaptureOutput()
 {
     char buffer[512];
-    while (running)
+    while (m_Running)
     {
-        ssize_t count = read(pipe_fd[0], buffer, sizeof(buffer) - 1);
+        auto count = read(m_PipeFd[0], buffer, sizeof(buffer) - 1);
         if (count > 0)
         {
-            buffer[count] = '\0';
-            std::lock_guard<std::mutex> lock(log_mutex);
-            log_lines.emplace_back(buffer);
+            buffer[count] = 0;
+
+            std::lock_guard<std::mutex> lock(m_LogMutex);
+            m_LogLines.emplace_back(buffer);
         }
     }
 }
 
 void Console::ImGuiPanel()
 {
-    ImGui::Begin("Console");
-
-    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
-
-    std::lock_guard<std::mutex> lock(log_mutex);
-    for (const auto& line : log_lines)
+    if (!ImGui::Begin("Console"))
     {
-        ImGui::TextUnformatted(line.c_str());
+        ImGui::End();
+        return;
     }
 
-    if (auto_scroll)
+    if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -ImGui::GetTextLineHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar))
     {
-        ImGui::SetScrollHereY(1.0f);
+        std::lock_guard<std::mutex> lock(m_LogMutex);
+        for (const auto& line : m_LogLines)
+        {
+            ImGui::TextUnformatted(line.c_str());
+        }
+
+        if (m_AutoScroll)
+        {
+            ImGui::SetScrollHereY(1.0f);
+        }
     }
 
     ImGui::EndChild();
