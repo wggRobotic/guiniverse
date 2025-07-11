@@ -2,7 +2,6 @@
 
 void N10::onFrame()
 {
-    rclcpp::spin_some(node);
 
     m_ImageSystemBackendGST->onFrame();
 
@@ -75,12 +74,6 @@ void N10::onFrame()
         gripper_input.send_angles = m_Input.gripper.send_angles;
     }
 
-    {
-        m_TurtleTwistMessage.linear.x = (drive_input.gas ? drive_input.lin_x : 0.f);
-        m_TurtleTwistMessage.linear.y = (drive_input.gas ? drive_input.lin_y : 0.f);
-        m_TurtleTwistMessage.angular.z = (drive_input.gas ? drive_input.ang : 0.f);
-    }
-    m_TurtleTwistPublisher->publish(m_TurtleTwistMessage);
 
     {
         std::lock_guard<std::mutex> lock(m_WheelsMutex);
@@ -88,7 +81,7 @@ void N10::onFrame()
         m_WheelsRPMMessage.data.resize(m_Wheels.size());
         m_WheelsAngleMessage.data.resize(m_Wheels.size());
 
-        for (int i = 0; i < m_Wheels.size(); i++)
+        for (size_t i = 0; i < m_Wheels.size(); i++)
         {
             float comp_x = drive_input.lin_x - drive_input.ang * m_Wheels.at(i).y;
             float comp_y = drive_input.lin_y + drive_input.ang * m_Wheels.at(i).x;

@@ -23,7 +23,7 @@ public:
     void onGuiStartup() override;
     void onGuiShutdown() override;
 
-    void IMUCallback(const std_msgs::msg::Float32::SharedPtr msg);
+    void IMUCallback(const std_msgs::msg::Float32::UniquePtr msg);
 
 private:
     std::shared_ptr<ImageSystem> m_ImageSystem;
@@ -48,13 +48,7 @@ private:
 
     std::atomic<float> m_IMUAngle{ 0.f };
 
-    // ros2
-
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr m_IMUSubscriber;
-
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TwistPublisher;
     geometry_msgs::msg::Twist m_TwistMessage;
-
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
-    geometry_msgs::msg::Twist m_TurtleTwistMessage;
 };

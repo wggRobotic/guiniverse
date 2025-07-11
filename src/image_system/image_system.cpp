@@ -1,5 +1,6 @@
 #include <guiniverse/image_system/image_system.hpp>
 #include <imgui.h>
+#include <GL/gl.h>
 
 #define GLCALL(call)                                                                              \
     do                                                                                            \
@@ -126,7 +127,7 @@ ImageSystem::ImageSystem(rclcpp::Node::SharedPtr node)
 
 ImageSystem::~ImageSystem()
 {
-    for (int i = 0; i < m_ImageProcessors.size(); i++)
+    for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->addons.thread_should_close.store(true);
         if (m_ImageProcessors[i]->addons.thread.joinable())
@@ -233,7 +234,7 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
 
 void ImageSystem::onGuiStartup()
 {
-    for (int i = 0; i < m_ImageProcessors.size(); i++)
+    for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->image.create_texture();
         m_ImageProcessors[i]->addons.diff.image.create_texture();
@@ -243,7 +244,7 @@ void ImageSystem::onGuiStartup()
 
 void ImageSystem::onGuiShutdown()
 {
-    for (int i = 0; i < m_ImageProcessors.size(); i++)
+    for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->image.destroy_texture();
         m_ImageProcessors[i]->addons.diff.image.destroy_texture();
@@ -253,7 +254,7 @@ void ImageSystem::onGuiShutdown()
 
 void ImageSystem::onGuiFrame()
 {
-    for (int i = 0; i < m_ImageProcessors.size(); i++)
+    for (size_t i = 0; i < m_ImageProcessors.size(); i++)
     {
         int addon_flags = m_ImageProcessors[i]->addons.flags.load();
         bool qrcode_addon = (addon_flags & ImageSystemAddOn_QRCode ? true : false);
