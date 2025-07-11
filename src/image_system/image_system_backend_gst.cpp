@@ -8,7 +8,7 @@ ImageSystemBackendGST::ImageSystemBackendGST(std::shared_ptr<ImageSystem> image_
 
 ImageSystemBackendGST::~ImageSystemBackendGST()
 {
-    for (unsigned i = 0; i < m_Processors.size(); i++)
+    for (unsigned i = 0; i < m_Processors.size(); ++i)
     {
         gst_element_set_state(m_Processors[i].Pipeline, GST_STATE_NULL);
         gst_object_unref(m_Processors[i].Pipeline);
@@ -17,7 +17,7 @@ ImageSystemBackendGST::~ImageSystemBackendGST()
 
 void ImageSystemBackendGST::OnFrame()
 {
-    for (unsigned i = 0; i < m_Processors.size(); i++)
+    for (unsigned i = 0; i < m_Processors.size(); ++i)
     {
         GstSample* sample = gst_app_sink_try_pull_sample(m_Processors[i].Sink, 0);
 
@@ -75,7 +75,7 @@ void ImageSystemBackendGST::AddSink(short port)
     std::string sink_name = "sink" + std::to_string(size);
     std::string launch_string = "udpsrc port=" + std::to_string(port) + " buffer-size=1000000 ! application/x-rtp,media=video,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! avdec_h264 low-latency=true ! videoconvert ! video/x-raw,format=RGB ! appsink name=" + sink_name + " max-buffers=1 drop=true";
 
-    printf(launch_string.c_str());
+    std::cout << launch_string << std::endl;
 
     m_Processors[size].Pipeline = gst_parse_launch(launch_string.c_str(), NULL);
 

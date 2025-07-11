@@ -65,7 +65,7 @@ void Idefix::OnGuiFrame(GLFWwindow* window, JoystickInput& input)
             (m_Input.main_axes.x == 0.f && m_Input.main_axes.y == 0.f)
                 ? 0
                 : &m_Input.main_axes,
-            (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : (80, 80, 80, 255)));
+            (m_Input.gas_button ? IM_COL32(150, 150, 150, 255) : IM_COL32(80, 80, 80, 255)));
 
         ImGui::SetCursorScreenPos(
             ImVec2(pos.x + 220.f, pos.y + ImGui::GetStyle().ItemSpacing.y));

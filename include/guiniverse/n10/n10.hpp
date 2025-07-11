@@ -39,14 +39,14 @@ public:
     void OnGuiStartup() override;
     void OnGuiShutdown() override;
 
-    void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
-    void WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
-    void GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::SharedPtr msg);
-    void GripperDistanceSensorCallback(const std_msgs::msg::Float32::SharedPtr msg);
+    void WheelsRPMFeedbackCallback(const std_msgs::msg::Float32MultiArray::UniquePtr msg);
+    void WheelsAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::UniquePtr msg);
+    void GripperAngleFeedbackCallback(const std_msgs::msg::Float32MultiArray::UniquePtr msg);
+    void GripperDistanceSensorCallback(const std_msgs::msg::Float32::UniquePtr msg);
 
-    void VoltagePowerManagementCallback(const std_msgs::msg::Float32::SharedPtr msg);
-    void VoltageAdatpterCallback(const std_msgs::msg::Float32::SharedPtr msg);
-    void WheelsEnabledCallback(const std_msgs::msg::ByteMultiArray::SharedPtr msg);
+    void VoltagePowerManagementCallback(const std_msgs::msg::Float32::UniquePtr msg);
+    void VoltageAdapterCallback(const std_msgs::msg::Float32::UniquePtr msg);
+    void WheelsEnabledCallback(const std_msgs::msg::ByteMultiArray::UniquePtr msg);
 
     void EnableMotorClientCallback(rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture response);
 
@@ -127,8 +127,6 @@ private:
 
     std::atomic<bool> m_GripperMode{ false };
 
-    // ros2
-
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsRPMFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_WheelsAngleFeedbackSubscriber;
     rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAngleFeedbackSubscriber;
@@ -144,9 +142,6 @@ private:
     std_msgs::msg::Float32MultiArray m_WheelsAngleMessage;
     rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr m_GripperAnglePublisher;
     std_msgs::msg::Float32MultiArray m_GripperAngleMessage;
-
-    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TurtleTwistPublisher;
-    geometry_msgs::msg::Twist m_TurtleTwistMessage;
 
     rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr m_EnableMotorClient;
     bool m_EnableMotorClientWaiting = false;

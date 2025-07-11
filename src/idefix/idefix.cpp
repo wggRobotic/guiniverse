@@ -14,7 +14,6 @@ void Idefix::OnStartup()
     m_IMUSubscriber = GetNode()->create_subscription<std_msgs::msg::Float32>("imu", 10, std::bind(&Idefix::IMUCallback, this, std::placeholders::_1));
 
     m_TwistPublisher = GetNode()->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
-    m_TurtleTwistPublisher = GetNode()->create_publisher<geometry_msgs::msg::Twist>("/turtle1/cmd_vel", 10);
 
     m_ImageSystem = std::make_shared<ImageSystem>(GetNode());
 
@@ -28,7 +27,6 @@ void Idefix::OnStartup()
 void Idefix::OnShutdown()
 {
     m_TwistPublisher.reset();
-    m_TurtleTwistPublisher.reset();
 
     m_DataCaptureSystem.reset();
 
@@ -38,7 +36,7 @@ void Idefix::OnShutdown()
     m_ImageSystem.reset();
 }
 
-void Idefix::IMUCallback(const std_msgs::msg::Float32::SharedPtr msg)
+void Idefix::IMUCallback(const std_msgs::msg::Float32::UniquePtr msg)
 {
     m_IMUAngle.store(msg->data);
 }

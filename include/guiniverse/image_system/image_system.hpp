@@ -16,9 +16,9 @@ struct ImageSystemImage final
     std::mutex ImageMutex;
     cv::Mat Image;
 
-    unsigned int TextureObject;
-    unsigned int TextureWidth = 0;
-    unsigned int TextureHeight = 0;
+    GLuint TextureObject;
+    int TextureWidth = 0;
+    int TextureHeight = 0;
 
     bool Dirty = false;
 

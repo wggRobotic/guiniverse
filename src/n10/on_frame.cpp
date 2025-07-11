@@ -2,7 +2,7 @@
 
 void N10::OnFrame()
 {
-    rclcpp::spin_some(m_Node);
+    rclcpp::spin_some(GetNode());
 
     m_ImageSystemBackendGST->OnFrame();
 
@@ -28,59 +28,52 @@ void N10::OnFrame()
     {
         std::lock_guard<std::mutex> lock(m_InputMutex);
 
-        drive_input.gas = m_Input.drive.gas_button;
+        drive_input.gas = m_Input.Drive.GasButton;
 
-        if (m_Input.drive.dog_walk_button)
+        if (m_Input.Drive.DogWalkButton)
         {
-            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.8f;
-            drive_input.lin_y = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * 0.8f;
+            drive_input.lin_x = m_Input.Drive.MainAxisY * m_Input.Drive.ScalarAxis * 0.8f;
+            drive_input.lin_y = m_Input.Drive.MainAxisX * m_Input.Drive.ScalarAxis * 0.8f;
             drive_input.ang = 0.f;
         }
         else
         {
-            drive_input.lin_x = m_Input.drive.main_axis_y * m_Input.drive.scalar_axis * 0.8f;
+            drive_input.lin_x = m_Input.Drive.MainAxisY * m_Input.Drive.ScalarAxis * 0.8f;
             drive_input.lin_y = 0.f;
-            drive_input.ang = m_Input.drive.main_axis_x * m_Input.drive.scalar_axis * 2.f
-                            * (m_Input.drive.main_axis_y * m_Input.drive.scalar_axis < 0 ? -1.f : 1.f);
+            drive_input.ang = m_Input.Drive.MainAxisX * m_Input.Drive.ScalarAxis * 2.f
+                            * (m_Input.Drive.MainAxisY * m_Input.Drive.ScalarAxis < 0 ? -1.f : 1.f);
         }
 
-        if (m_Input.drive.enable_button_physical)
+        if (m_Input.Drive.EnableButtonPhysical)
         {
-            if (!m_Input.drive.enable_button)
+            if (!m_Input.Drive.EnableButton)
             {
                 drive_input.enable_service = true;
                 drive_input.enable_service_enable = true;
-                m_Input.drive.enable_button = true;
+                m_Input.Drive.EnableButton = true;
             }
         }
         else
-            m_Input.drive.enable_button = false;
+            m_Input.Drive.EnableButton = false;
 
-        if (m_Input.drive.disable_button_physical)
+        if (m_Input.Drive.DisableButtonPhysical)
         {
-            if (!m_Input.drive.disable_button)
+            if (!m_Input.Drive.DisableButton)
             {
                 drive_input.enable_service = true;
                 drive_input.enable_service_enable = false;
-                m_Input.drive.disable_button = true;
+                m_Input.Drive.DisableButton = true;
             }
         }
         else
-            m_Input.drive.disable_button = false;
+            m_Input.Drive.DisableButton = false;
 
-        gripper_input.up = m_Input.gripper.up_axis;
-        gripper_input.forward = m_Input.gripper.forward_axis;
-        gripper_input.ground_angle = m_Input.gripper.ground_angle_axis;
-        gripper_input.state = m_Input.gripper.gripper_state;
-        gripper_input.send_angles = m_Input.gripper.send_angles;
+        gripper_input.up = m_Input.Gripper.UpAxis;
+        gripper_input.forward = m_Input.Gripper.ForwardAxis;
+        gripper_input.ground_angle = m_Input.Gripper.GroundAngleAxis;
+        gripper_input.state = m_Input.Gripper.GripperState;
+        gripper_input.send_angles = m_Input.Gripper.SendAngles;
     }
-
-    {
-        m_TurtleTwistMessage.linear.x = (drive_input.gas ? drive_input.lin_x : 0.f);
-        m_TurtleTwistMessage.linear.y = (drive_input.gas ? drive_input.lin_y : 0.f);
-        m_TurtleTwistMessage.angular.z = (drive_input.gas ? drive_input.ang : 0.f);
-    }
-    m_TurtleTwistPublisher->publish(m_TurtleTwistMessage);
 
     {
         std::lock_guard<std::mutex> lock(m_WheelsMutex);
@@ -88,7 +81,7 @@ void N10::OnFrame()
         m_WheelsRPMMessage.data.resize(m_Wheels.size());
         m_WheelsAngleMessage.data.resize(m_Wheels.size());
 
-        for (int i = 0; i < m_Wheels.size(); i++)
+        for (size_t i = 0; i < m_Wheels.size(); i++)
         {
             float comp_x = drive_input.lin_x - drive_input.ang * m_Wheels.at(i).Y;
             float comp_y = drive_input.lin_y + drive_input.ang * m_Wheels.at(i).X;
@@ -117,7 +110,7 @@ void N10::OnFrame()
     if (!m_EnableMotorClientWaiting && drive_input.enable_service)
     {
         if (!m_EnableMotorClient->service_is_ready())
-            RCLCPP_WARN(m_Node->get_logger(), "Enable service is not available.");
+            RCLCPP_WARN(GetNode()->get_logger(), "Enable service is not available.");
 
         else
         {
@@ -125,21 +118,21 @@ void N10::OnFrame()
             request->data = drive_input.enable_service_enable;
 
             if (drive_input.enable_service_enable)
-                RCLCPP_INFO(m_Node->get_logger(), "Enabeling ...");
+                RCLCPP_INFO(GetNode()->get_logger(), "Enabeling ...");
             else
-                RCLCPP_INFO(m_Node->get_logger(), "Disabling ...");
+                RCLCPP_INFO(GetNode()->get_logger(), "Disabling ...");
 
             m_EnableMotorClient->async_send_request(request, std::bind(&N10::EnableMotorClientCallback, this, std::placeholders::_1));
 
             m_EnableMotorClientWaiting = true;
-            m_EnableMotorClientTimeSent = m_Node->now().seconds();
+            m_EnableMotorClientTimeSent = GetNode()->now().seconds();
         }
     }
     else if (
         m_EnableMotorClientWaiting
-        && m_EnableMotorClientTimeSent + 5 < m_Node->now().seconds())
+        && m_EnableMotorClientTimeSent + 5 < GetNode()->now().seconds())
     {
-        RCLCPP_INFO(m_Node->get_logger(), "Enable Service didn't respond in 5 seconds");
+        RCLCPP_INFO(GetNode()->get_logger(), "Enable Service didn't respond in 5 seconds");
         m_EnableMotorClientWaiting = false;
     }
 
@@ -148,43 +141,43 @@ void N10::OnFrame()
 
         float speed_target = 0.001f;
 
-        m_Gripper.target_x += gripper_input.forward * speed_target;
-        m_Gripper.target_y += gripper_input.up * speed_target;
-        m_Gripper.target_ground_angle += gripper_input.ground_angle * 0.01f;
+        m_Gripper.TargetX += gripper_input.forward * speed_target;
+        m_Gripper.TargetY += gripper_input.up * speed_target;
+        m_Gripper.TargetGroundAngle += gripper_input.ground_angle * 0.01f;
 
         float angles[3];
 
-        m_Gripper.inrange = true;
+        m_Gripper.InRange = true;
         if (!CalculateGripperAngles(
-                m_Gripper.target_x,
-                m_Gripper.target_y,
-                m_Gripper.target_ground_angle,
+                m_Gripper.TargetX,
+                m_Gripper.TargetY,
+                m_Gripper.TargetGroundAngle,
                 angles))
-            m_Gripper.inrange = false;
+            m_Gripper.InRange = false;
 
         if (!m_GripperMode.load())
         {
-            m_Gripper.ready = false;
+            m_Gripper.Ready = false;
 
             for (int i = 0; i < 4; i++)
             {
                 float angular_step = 0.005f;
 
-                float diff = m_Gripper.drive_position_angles[i]
+                float diff = m_Gripper.DrivePositionAngles[i]
                            - m_GripperAngleMessage.data[i];
 
                 m_GripperAngleMessage.data[i] += (fabs(diff) < angular_step ? diff : (diff > 0 ? angular_step : -angular_step));
             }
         }
-        else if (m_Gripper.inrange)
+        else if (m_Gripper.InRange)
         {
-            if (!m_Gripper.ready)
+            if (!m_Gripper.Ready)
             {
-                m_Gripper.current_x = m_Gripper.target_x;
-                m_Gripper.current_y = m_Gripper.target_y;
-                m_Gripper.current_ground_angle = m_Gripper.target_ground_angle;
+                m_Gripper.CurrentX = m_Gripper.TargetX;
+                m_Gripper.CurrentY = m_Gripper.TargetY;
+                m_Gripper.CurrentGroundAngle = m_Gripper.TargetGroundAngle;
 
-                m_Gripper.ready = true;
+                m_Gripper.Ready = true;
 
                 for (int i = 0; i < 4; i++)
                 {
@@ -192,30 +185,30 @@ void N10::OnFrame()
 
                     float diff = angles[i] - m_GripperAngleMessage.data[i];
                     if (fabs(diff) > 0.0001)
-                        m_Gripper.ready = false;
+                        m_Gripper.Ready = false;
 
                     m_GripperAngleMessage.data[i] += (fabs(diff) < angular_step ? diff : (diff > 0 ? angular_step : -angular_step));
                 }
             }
 
-            if (m_Gripper.ready)
+            if (m_Gripper.Ready)
             {
                 float speed_gripper = 0.001f;
 
                 float length = sqrtf(
-                    (m_Gripper.target_x - m_Gripper.current_x)
-                        * (m_Gripper.target_x - m_Gripper.current_x)
-                    + (m_Gripper.target_y - m_Gripper.current_y)
-                          * (m_Gripper.target_y - m_Gripper.current_y));
+                    (m_Gripper.TargetX - m_Gripper.CurrentX)
+                        * (m_Gripper.TargetX - m_Gripper.CurrentX)
+                    + (m_Gripper.TargetY - m_Gripper.CurrentY)
+                          * (m_Gripper.TargetY - m_Gripper.CurrentY));
 
-                float new_x = m_Gripper.current_x
-                            + (m_Gripper.target_x - m_Gripper.current_x) * (speed_gripper > length ? 1.f : speed_gripper / length);
-                float new_y = m_Gripper.current_y
-                            + (m_Gripper.target_y - m_Gripper.current_y) * (speed_gripper > length ? 1.f : speed_gripper / length);
+                float new_x = m_Gripper.CurrentX
+                            + (m_Gripper.TargetX - m_Gripper.CurrentX) * (speed_gripper > length ? 1.f : speed_gripper / length);
+                float new_y = m_Gripper.CurrentY
+                            + (m_Gripper.TargetY - m_Gripper.CurrentY) * (speed_gripper > length ? 1.f : speed_gripper / length);
 
-                float ground_angle_diff = m_Gripper.target_ground_angle
-                                        - m_Gripper.current_ground_angle;
-                float new_ground_angle = m_Gripper.current_ground_angle + (0.01f > fabs(ground_angle_diff) ? ground_angle_diff : (ground_angle_diff > 0.f ? 0.01f : -0.01f));
+                float ground_angle_diff = m_Gripper.TargetGroundAngle
+                                        - m_Gripper.CurrentGroundAngle;
+                float new_ground_angle = m_Gripper.CurrentGroundAngle + (0.01f > fabs(ground_angle_diff) ? ground_angle_diff : (ground_angle_diff > 0.f ? 0.01f : -0.01f));
 
                 CalculateGripperAngles(new_x, new_y, new_ground_angle, angles);
 
@@ -224,35 +217,35 @@ void N10::OnFrame()
                 m_GripperAngleMessage.data[2] = angles[2];
                 m_GripperAngleMessage.data[3] = gripper_input.state * M_PIf / 2.f;
 
-                m_Gripper.current_x = new_x;
-                m_Gripper.current_y = new_y;
-                m_Gripper.current_ground_angle = new_ground_angle;
+                m_Gripper.CurrentX = new_x;
+                m_Gripper.CurrentY = new_y;
+                m_Gripper.CurrentGroundAngle = new_ground_angle;
             }
         }
     }
     if (gripper_input.send_angles)
         m_GripperAnglePublisher->publish(m_GripperAngleMessage);
 
-    rclcpp::spin_some(m_Node);
+    rclcpp::spin_some(GetNode());
 }
 
 bool N10::CalculateGripperAngles(float x, float y, float ground_angle, float* result_angles)
 {
-    bool inrange = true;
+    bool in_range = true;
 
     float theta = atan2f(y, x);
 
-    float cos_phi = (x * x + y * y - m_Gripper.segments[0] * m_Gripper.segments[0]
-                     - m_Gripper.segments[1] * m_Gripper.segments[1])
-                  / (-2.f * m_Gripper.segments[0] * m_Gripper.segments[1]);
+    float cos_phi = (x * x + y * y - m_Gripper.Segments[0] * m_Gripper.Segments[0]
+                     - m_Gripper.Segments[1] * m_Gripper.Segments[1])
+                  / (-2.f * m_Gripper.Segments[0] * m_Gripper.Segments[1]);
 
-    float cos_sigma = (m_Gripper.segments[1] * m_Gripper.segments[1] - x * x - y * y
-                       - m_Gripper.segments[0] * m_Gripper.segments[0])
-                    / (-2.f * m_Gripper.segments[0] * sqrtf(x * x + y * y));
+    float cos_sigma = (m_Gripper.Segments[1] * m_Gripper.Segments[1] - x * x - y * y
+                       - m_Gripper.Segments[0] * m_Gripper.Segments[0])
+                    / (-2.f * m_Gripper.Segments[0] * sqrtf(x * x + y * y));
 
     if (1.f < cos_phi || -1.f > cos_phi || 1.f < cos_sigma || -1.f > cos_sigma)
     {
-        inrange = false;
+        in_range = false;
 
         cos_phi = (1.f < cos_phi ? 1.f : -1.f);
         cos_sigma = (1.f < cos_sigma ? 1.f : -1.f);
@@ -262,37 +255,37 @@ bool N10::CalculateGripperAngles(float x, float y, float ground_angle, float* re
     if (result_angles[0] > 1.9f)
     {
         result_angles[0] = 1.9f;
-        inrange = false;
+        in_range = false;
     }
     if (result_angles[0] < -0.1f)
     {
         result_angles[0] = -0.1f;
-        inrange = false;
+        in_range = false;
     }
 
     result_angles[1] = acosf(cos_phi) - M_PIf;
     if (result_angles[1] > 2.2f)
     {
         result_angles[1] = 2.2f;
-        inrange = false;
+        in_range = false;
     }
     if (result_angles[1] < -2.2f)
     {
         result_angles[1] = -2.2f;
-        inrange = false;
+        in_range = false;
     }
 
     result_angles[2] = ground_angle - (result_angles[0] + result_angles[1]);
     if (result_angles[2] > 2.2)
     {
         result_angles[2] = 2.2f;
-        inrange = false;
+        in_range = false;
     }
     if (result_angles[2] < -2.2f)
     {
         result_angles[2] = -2.2f;
-        inrange = false;
+        in_range = false;
     }
 
-    return inrange;
+    return in_range;
 }
