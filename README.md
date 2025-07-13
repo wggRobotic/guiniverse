@@ -53,7 +53,7 @@ rosdep install --from-paths src --ignore-src -r -y
 
 ```bash
 # Source ROS2 environment
-source /opt/ros/humble/setup.bash  # Adjust for your ROS2 distribution
+source /opt/ros/jazzy/setup.bash  # Adjust for your ROS2 distribution
 
 # Build the package
 colcon build --cmake-force-configure --packages-select guiniverse \
@@ -118,7 +118,7 @@ This GUI supports multiple robot platforms. Each robot has its own control inter
 - **Status**: 🚧 Coming soon
 - **Features**: Planned implementation for 4-wheel drive robot
 
-# #Launch Files
+## Launch Files
 
 You can also use the provided launch files:
 
