@@ -35,7 +35,7 @@ void ControlGui::RobotControllerThreadFunction() {
 
     int robot_selected = NO_ROBOT_SELECTED;
 
-    while (m_Running.load())
+    while (m_Running.load() && rclcpp::ok())
     {
 
         if (m_ChangeState.load())
@@ -58,4 +58,6 @@ void ControlGui::RobotControllerThreadFunction() {
 
         m_RosRate.sleep();
     }
+
+    m_Running.store(false);
 }

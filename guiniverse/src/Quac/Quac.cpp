@@ -14,7 +14,7 @@ void Quac::onStartup()
     m_Input.gas_button = false;
     m_Input.publish_cmd = true;
 
-    m_TwistStampedPublisher = node->create_publisher<geometry_msgs::msg::TwistStamped>("/quac/cmd_vel_pilot", 10);
+    m_TwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("/quac/cmd_vel_pilot", 10);
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");
@@ -34,7 +34,7 @@ void Quac::onStartup()
 
 void Quac::onShutdown()
 {
-    m_TwistStampedPublisher.reset();
+    m_TwistPublisher.reset();
     m_DataCaptureSystem.reset();
     m_ImageSystemBackendGST.reset();
     m_ImageSystem.reset();

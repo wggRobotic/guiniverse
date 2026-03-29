@@ -4,6 +4,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt update
 RUN apt install -y ros-humble-cv-bridge ros-humble-image-transport ros-humble-compressed-image-transport
+RUN apt install -y ros-humble-rmw-cyclonedds-cpp
 
 RUN apt install -y \
   libopencv-dev \

@@ -7,7 +7,7 @@
 
 #include <atomic>
 #include <mutex>
-#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "geometry_msgs/msg/twist.hpp"
 
 #include "imgui.h"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -62,8 +62,8 @@ private:
         std::mutex mutex;
     } m_Arm;
 
-    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr m_TwistStampedPublisher;
-    geometry_msgs::msg::TwistStamped m_TwistStampedMessage;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TwistPublisher;
+    geometry_msgs::msg::Twist m_TwistMessage;
 
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr m_JointStatesSubscriber;
 
