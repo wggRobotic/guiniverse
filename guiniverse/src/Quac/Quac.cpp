@@ -14,7 +14,10 @@ void Quac::onStartup()
     m_Input.gas_button = false;
     m_Input.publish_cmd = true;
 
-    m_TwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("/quac/cmd_vel_pilot", 10);
+    m_TwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_pilot", 10);
+
+    m_ImuSubscriber = node->create_subscription<sensor_msgs::msg::Imu>("imu", 10, std::bind(&Quac::ImuCallback, this, std::placeholders::_1));
+    m_MagneticFieldSubscriber = node->create_subscription<sensor_msgs::msg::MagneticField>("magnetic_field", 10, std::bind(&Quac::MagneticFieldCallback, this, std::placeholders::_1));;
 
     m_DataCaptureSystem = std::make_shared<DataCaptureSystem>(node);
     m_DataCaptureSystem->addSection("QRCodes", "qrcode");
@@ -25,22 +28,50 @@ void Quac::onStartup()
     m_ImageSystemBackendGST->addSink(5000);
     m_ImageSystemBackendGST->addSink(5001);
 
+    m_ImageSystemBackendROS = std::make_shared<ImageSystemBackendROS>(m_ImageSystem, node);
+    m_ImageSystemBackendROS->addSubscriber("thermal_image");
+
     m_Arm.publish_pose = false;
     for (int i = 0; i < 3; i++) { m_Arm.joints[i].index = -1; m_Arm.joints[i].value = 0;}
     
-    m_JointStatesSubscriber = node->create_subscription<sensor_msgs::msg::JointState>("/quac/joint_states", 10, std::bind(&Quac::jointStateCallback, this, std::placeholders::_1));
-    m_ArmPosePublisher = node->create_publisher<geometry_msgs::msg::Pose>("/quac/ee_pos", 10);
+    m_JointStatesSubscriber = node->create_subscription<sensor_msgs::msg::JointState>("joint_states", 10, std::bind(&Quac::jointStateCallback, this, std::placeholders::_1));
+    m_ArmPosePublisher = node->create_publisher<geometry_msgs::msg::Pose>("ee_pos", 10);
 }
 
 void Quac::onShutdown()
 {
     m_TwistPublisher.reset();
+    m_ImuSubscriber.reset();
+    m_MagneticFieldSubscriber.reset();
     m_DataCaptureSystem.reset();
     m_ImageSystemBackendGST.reset();
+    m_ImageSystemBackendROS.reset();
     m_ImageSystem.reset();
 
     m_JointStatesSubscriber.reset();
     m_ArmPosePublisher.reset();
+}
+
+void Quac::ImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(m_SensorData.mutex);
+
+    m_SensorData.acceleration.x = msg->linear_acceleration.x;
+    m_SensorData.acceleration.y = msg->linear_acceleration.x;
+    m_SensorData.acceleration.z = msg->linear_acceleration.z;
+
+    m_SensorData.angular_velocity.x = msg->angular_velocity.x;
+    m_SensorData.angular_velocity.y = msg->angular_velocity.x;
+    m_SensorData.angular_velocity.z = msg->angular_velocity.z;
+}
+
+void Quac::MagneticFieldCallback(const sensor_msgs::msg::MagneticField::SharedPtr msg)
+{
+    std::lock_guard<std::mutex> lock(m_SensorData.mutex);
+
+    m_SensorData.magnetic_field.x = msg->magnetic_field.x;
+    m_SensorData.magnetic_field.y = msg->magnetic_field.y;
+    m_SensorData.magnetic_field.z = msg->magnetic_field.z;
 }
 
 void Quac::jointStateCallback(const sensor_msgs::msg::JointState::SharedPtr msg)
