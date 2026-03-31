@@ -137,26 +137,32 @@ void Quac::onGuiFrame(GLFWwindow* window, JoystickInput& input)
     {
         std::lock_guard<std::mutex> lock(m_SensorData.mutex);
 
-        ImGui::Text(
-            "magnetic field: x: %f   y: %f   z: %f uT", 
+        char buf[256];
+        snprintf(buf, sizeof(buf), 
+            "magnetic field:      x: %10.2f   y: %10.2f   z: %10.2f uT", 
             m_SensorData.magnetic_field.x, 
             m_SensorData.magnetic_field.y, 
             m_SensorData.magnetic_field.z
         );
+        ImGui::Text(buf);
 
-        ImGui::Text(
-            "acceleration: x: %f   y: %f   z: %f m/s^2", 
+        snprintf(buf, sizeof(buf), 
+            "acceleration:        x: %10.2f   y: %10.2f   z: %10.2f m/s^2", 
             m_SensorData.acceleration.x, 
             m_SensorData.acceleration.y, 
             m_SensorData.acceleration.z
         );
 
-        ImGui::Text(
-            "angular velocity: x: %f   y: %f   z: %f degrees/s", 
+        ImGui::Text(buf);
+
+        snprintf(buf, sizeof(buf), 
+            "angular velocity:    x: %10.2f   y: %10.2f   z: %10.2f degrees/s", 
             m_SensorData.angular_velocity.x, 
             m_SensorData.angular_velocity.y, 
             m_SensorData.angular_velocity.z
         );
+
+        ImGui::Text(buf);
 
     }
     ImGui::End();

@@ -57,11 +57,11 @@ void Quac::ImuCallback(const sensor_msgs::msg::Imu::SharedPtr msg)
     std::lock_guard<std::mutex> lock(m_SensorData.mutex);
 
     m_SensorData.acceleration.x = msg->linear_acceleration.x;
-    m_SensorData.acceleration.y = msg->linear_acceleration.x;
+    m_SensorData.acceleration.y = msg->linear_acceleration.y;
     m_SensorData.acceleration.z = msg->linear_acceleration.z;
 
     m_SensorData.angular_velocity.x = msg->angular_velocity.x;
-    m_SensorData.angular_velocity.y = msg->angular_velocity.x;
+    m_SensorData.angular_velocity.y = msg->angular_velocity.y;
     m_SensorData.angular_velocity.z = msg->angular_velocity.z;
 }
 

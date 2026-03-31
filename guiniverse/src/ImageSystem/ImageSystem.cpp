@@ -55,11 +55,11 @@ void ImageSystemImage::imgui_image(bool flip_vertically, bool flip_horizontally)
             {
                 texture_width = image.cols;
                 texture_height = image.rows;
-                GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture_width, texture_height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.data));                
+                GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, texture_width, texture_height, 0, GL_BGR, GL_UNSIGNED_BYTE, image.data));                
             }
             else
             {
-                GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texture_width, texture_height, GL_RGB, GL_UNSIGNED_BYTE, image.data));
+                GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texture_width, texture_height, GL_BGR, GL_UNSIGNED_BYTE, image.data));
             }
             GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
         }   

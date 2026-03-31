@@ -38,7 +38,7 @@ protected:
 private:
 
     void _onStartup() {
-        node = std::make_shared<rclcpp::Node>(m_RosRobotName + "_controller_node", "/" + m_RosRobotName);
+        node = std::make_shared<rclcpp::Node>("guiniverse", "/" + m_RosRobotName);
         onStartup();
     };
 
