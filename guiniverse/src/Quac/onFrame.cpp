@@ -28,5 +28,18 @@ void Quac::onFrame()
             m_ArmPosePublisher->publish(m_ArmPoseMessage);
         }
     }
+
+    {
+        rclcpp::Time current_time = node->now();
+
+        rclcpp::Duration elapsed = current_time - m_LastIPTime;
+
+        if (elapsed.seconds() >= 1.0)
+        {
+            m_IPPublisher->publish(m_IPMessage);
+            m_LastIPTime = current_time;
+        }
+
+    }
     
 }

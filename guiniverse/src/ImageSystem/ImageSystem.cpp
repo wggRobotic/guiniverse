@@ -36,7 +36,7 @@ void ImageSystemImage::destroy_texture()
     texture_height = 0;
 }
 
-void ImageSystemImage::imgui_image(bool flip_vertically, bool flip_horizontally)
+void ImageSystemImage::imgui_image(bool flip_vertically, bool flip_horizontally, bool rotate, unsigned int default_texture)
 {
     bool empty;
 
@@ -65,11 +65,12 @@ void ImageSystemImage::imgui_image(bool flip_vertically, bool flip_horizontally)
         }   
     }
 
-    if (!empty)
+    
     {
         ImVec2 widget_size = ImGui::GetContentRegionAvail();
 
-        float image_aspect = (float)texture_width/ (float)texture_height;
+        float image_aspect = (empty ? 1.f :(float)texture_width/ (float)texture_height * par);
+        if (rotate) image_aspect = 1/image_aspect;
         float widget_aspect = widget_size.x / widget_size.y;
 
         ImVec2 display_size;
@@ -78,18 +79,50 @@ void ImageSystemImage::imgui_image(bool flip_vertically, bool flip_horizontally)
             display_size = ImVec2(widget_size.y * image_aspect, widget_size.y);
         else 
             display_size = ImVec2(widget_size.x, widget_size.x / image_aspect);
-        
-        ImGui::Image(
-            (ImTextureID)gl_texture, 
-            display_size, 
-            ImVec2(flip_horizontally ? 1.f : 0.f, flip_vertically ? 1.f : 0.f), 
-            ImVec2(flip_horizontally ? 0.f : 1.f, flip_vertically ? 0.f : 1.f)
+    
+        ImVec2 uv[4] =
+        {
+            ImVec2(0.f, rotate ? 1.f : 0.f), 
+            ImVec2(rotate ? 0.f : 1.f, 0.f), 
+            ImVec2(1.f, rotate ? 0.f : 1.f),
+            ImVec2(rotate ? 1.f : 0.f, 1.f), 
+        };
+
+        if (flip_horizontally)
+        {
+            ImVec2 temp = uv[0];
+            uv[0] = uv[1];
+            uv[1] = temp;
+
+            temp = uv[2];
+            uv[2] = uv[3];
+            uv[3] = temp;
+        }
+
+        if (flip_vertically)
+        {
+            ImVec2 temp = uv[0];
+            uv[0] = uv[3];
+            uv[3] = temp;
+
+            temp = uv[1];
+            uv[1] = uv[2];
+            uv[2] = temp;
+        }
+
+        ImVec2 cursor = ImGui::GetCursorScreenPos();
+
+        ImGui::GetWindowDrawList()->AddImageQuad(
+            (ImTextureID)(empty ? default_texture : gl_texture),
+            cursor,
+            ImVec2(cursor.x + display_size.x, cursor.y),
+            ImVec2(cursor.x + display_size.x, cursor.y + display_size.y),
+            ImVec2(cursor.x, cursor.y + display_size.y),
+            uv[0], uv[1], uv[2], uv[3],
+            IM_COL32_WHITE
         );
     }
-    else
-    {
-        ImGui::Text("No image yet");
-    }
+
 }
     
 void ImageSystemImage::sub_image_transfer_ownership(cv::Mat& mat)
@@ -182,7 +215,7 @@ void ImageSystem::AddOnThreadFunction(int index)
     }
 }
 
-void ImageSystem::ImageCallback(int index, cv::Mat& image)
+void ImageSystem::ImageCallback(int index, cv::Mat& image, float par)
 {
 
     int addon_flags = m_ImageProcessors[index]->addons.flags.load();
@@ -191,6 +224,7 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
     if (addon_flags & ImageSystemAddOn_Diff) m_ImageProcessors[index]->image.copy_image(old_image);
 
     m_ImageProcessors[index]->image.sub_image_transfer_ownership(image);
+    m_ImageProcessors[index]->image.par = par;
 
     if (old_image.cols == image.cols && old_image.rows == image.rows && addon_flags & ImageSystemAddOn_Diff)
     {
@@ -198,6 +232,7 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
         cv::absdiff(image, old_image, diff_image);
         
         m_ImageProcessors[index]->addons.diff.image.sub_image_transfer_ownership(diff_image);
+        m_ImageProcessors[index]->addons.diff.image.par = par;
     }
 
     if (addon_flags & ImageSystemAddon_GrayScale)
@@ -209,11 +244,25 @@ void ImageSystem::ImageCallback(int index, cv::Mat& image)
         cv::cvtColor(grayscale, grayscale_rgb, cv::COLOR_GRAY2BGR);
 
         m_ImageProcessors[index]->addons.grayscale.image.sub_image_transfer_ownership(grayscale_rgb);
+        m_ImageProcessors[index]->addons.grayscale.image.par = par;
     }
 }
 
 void ImageSystem::onGuiStartup()
 {
+    GLCALL(glGenTextures(1, &default_texture));
+    GLCALL(glBindTexture(GL_TEXTURE_2D, default_texture));
+
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+
+    unsigned int data[] = {0xff0000ff, 0xff00ff00, 0xffff0000, 0xff00ffff};
+    GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));                
+
+    GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
+
     for (int i = 0; i < m_ImageProcessors.size(); i++)
     {
         m_ImageProcessors[i]->image.create_texture();
@@ -231,6 +280,8 @@ void ImageSystem::onGuiShutdown()
         m_ImageProcessors[i]->addons.diff.image.destroy_texture();
         m_ImageProcessors[i]->addons.grayscale.image.destroy_texture();
     }
+
+    GLCALL(glDeleteTextures(1, &default_texture));
 }
 
 void ImageSystem::onGuiFrame()
@@ -245,13 +296,18 @@ void ImageSystem::onGuiFrame()
         if (ImGui::Begin(m_ImageProcessors[i]->imgui_panel_name.c_str()))
         {
             ImGui::Checkbox("Flip vertically", &m_ImageProcessors[i]->flip_vertically);
+            ImGui::SameLine(0.0f, 10.0f);
             ImGui::Checkbox("Flip horizontally", &m_ImageProcessors[i]->flip_horizontally);
-            
+            ImGui::SameLine(0.0f, 10.0f);
+            ImGui::Checkbox("rotate", &m_ImageProcessors[i]->rotate);
+            ImGui::SameLine(0.0f, 10.0f);
             ImGui::Checkbox("QRCode scanning", &qrcode_addon);
+            ImGui::SameLine(0.0f, 10.0f);
             ImGui::Checkbox("Image diff", &diff_addon);
+            ImGui::SameLine(0.0f, 10.0f);
             ImGui::Checkbox("Image grayscale", &grayscale_addon);
 
-            m_ImageProcessors[i]->image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
+            m_ImageProcessors[i]->image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally, m_ImageProcessors[i]->rotate, default_texture);
         }
         ImGui::End();
 
@@ -259,7 +315,7 @@ void ImageSystem::onGuiFrame()
         {
             if (ImGui::Begin((m_ImageProcessors[i]->imgui_panel_name + " - diff").c_str()))
             {
-                m_ImageProcessors[i]->addons.diff.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
+                m_ImageProcessors[i]->addons.diff.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally, m_ImageProcessors[i]->rotate, default_texture);
             }
             ImGui::End();
         }
@@ -268,7 +324,7 @@ void ImageSystem::onGuiFrame()
         {
             if (ImGui::Begin((m_ImageProcessors[i]->imgui_panel_name + " - grayscale").c_str()))
             {
-                m_ImageProcessors[i]->addons.grayscale.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally);
+                m_ImageProcessors[i]->addons.grayscale.image.imgui_image(m_ImageProcessors[i]->flip_vertically, m_ImageProcessors[i]->flip_horizontally, m_ImageProcessors[i]->rotate, default_texture);
             }
             ImGui::End();
         }

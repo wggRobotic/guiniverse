@@ -15,6 +15,11 @@ void Quac::onStartup()
     m_Input.publish_cmd = true;
 
     m_TwistPublisher = node->create_publisher<geometry_msgs::msg::Twist>("cmd_vel_pilot", 10);
+    m_IPPublisher = node->create_publisher<std_msgs::msg::String>("video_target_ip", 10);
+    m_LastIPTime = node->now();
+    
+    node->declare_parameter<std::string>("host_ip", "127.0.0.1");
+    m_IPMessage.data = node->get_parameter("host_ip").as_string();
 
     m_ImuSubscriber = node->create_subscription<sensor_msgs::msg::Imu>("imu", 10, std::bind(&Quac::ImuCallback, this, std::placeholders::_1));
     m_MagneticFieldSubscriber = node->create_subscription<sensor_msgs::msg::MagneticField>("magnetic_field", 10, std::bind(&Quac::MagneticFieldCallback, this, std::placeholders::_1));;
@@ -41,6 +46,8 @@ void Quac::onStartup()
 void Quac::onShutdown()
 {
     m_TwistPublisher.reset();
+    m_IPPublisher.reset();
+
     m_ImuSubscriber.reset();
     m_MagneticFieldSubscriber.reset();
     m_DataCaptureSystem.reset();

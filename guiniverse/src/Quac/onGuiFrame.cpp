@@ -101,11 +101,11 @@ void Quac::onGuiFrame(GLFWwindow* window, JoystickInput& input)
         chasis_line(chassis.base_back, chassis.base_y + chassis.diaginal_down_y, chassis.base_back - chassis.diagonal_x, chassis.base_y + chassis.diaginal_down_y + chassis.diagonal_y);
 
         float angles[3];
-        angles[0] = M_PIf / 2.f - m_Arm.joints[0].value;
+        angles[0] = M_PIf + m_Arm.joints[0].value;
         angles[1] = - M_PIf / 2;
-        angles[2] = - m_Arm.joints[1].value;
+        angles[2] = - M_PIf / 2 + m_Arm.joints[1].value;
 
-        float segment_lengths[3] = {0.105f, 0.035f, 0.05f};
+        float segment_lengths[3] = {0.105f, 0.035f, 0.13f};
         bool received[3] = {m_Arm.joints[0].index != -1, m_Arm.joints[0].index != -1, m_Arm.joints[1].index != -1};
 
         ImVec2 joint = offset;

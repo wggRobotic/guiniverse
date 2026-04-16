@@ -21,6 +21,7 @@ struct ImageSystemImage
     unsigned int gl_texture;
     unsigned int texture_width = 0;
     unsigned int texture_height = 0;
+    float par;
 
     bool dirty = false;
 
@@ -28,7 +29,7 @@ struct ImageSystemImage
 
     void create_texture();
     void destroy_texture();
-    void imgui_image(bool flip_vertically, bool flip_horizontally);
+    void imgui_image(bool flip_vertically, bool flip_horizontally, bool rotate, unsigned int default_texture);
 
     void sub_image_transfer_ownership(cv::Mat& mat);
     void copy_image(cv::Mat& mat);
@@ -72,6 +73,7 @@ struct ImageSystemImageProcessor
 
     bool flip_vertically = false;
     bool flip_horizontally = false;
+    bool rotate = false;
   
     ImageSystemImage image;
 };
@@ -89,7 +91,7 @@ public:
     void onGuiShutdown();
 
     int addImageProcessor(const std::string& imgui_panel_name);
-    void ImageCallback(int index, cv::Mat& image);
+    void ImageCallback(int index, cv::Mat& image, float par);
 
 private:
 
@@ -97,6 +99,8 @@ private:
 
     std::vector<std::shared_ptr<ImageSystemImageProcessor>> m_ImageProcessors;
     rclcpp::Node::SharedPtr m_Node;
+
+    unsigned int default_texture;
 };
 
 class ImageSystemBackend

@@ -14,6 +14,12 @@ RUN apt install -y \
   libgstreamer-plugins-base1.0-dev \
   libgl1-mesa-dev \
   libglu1-mesa-dev \
+  gstreamer1.0-libav \
+  gstreamer1.0-tools \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-plugins-ugly \
   pkg-config
 
 RUN apt install -y \
@@ -40,5 +46,3 @@ RUN apt install -y \
 WORKDIR /ros2_ws
 COPY ./guiniverse /ros2_ws/src/guiniverse
 RUN . /opt/ros/humble/setup.bash && colcon build
-
-CMD . /opt/ros/humble/setup.bash && source /ros2_ws/install/setup.bash && cd /guiniverse_config && ros2 run guiniverse main

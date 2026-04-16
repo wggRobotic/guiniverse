@@ -32,17 +32,19 @@ void ImageSystemBackendGST::onFrame()
 
         if (caps && (timestamp != proc.last_frame_timestamp)) {
             GstStructure* structure = gst_caps_get_structure(caps, 0);
-            int width = 0, height = 0;
+            int width = 0, height = 0, par_num = 1, par_den = 1;
 
             if (structure &&
                 gst_structure_get_int(structure, "width", &width) &&
-                gst_structure_get_int(structure, "height", &height)) {
+                gst_structure_get_int(structure, "height", &height) &&
+                gst_structure_get_fraction(structure, "pixel-aspect-ratio", &par_num, &par_den)
+            ) {
 
                 GstMapInfo map;
                 if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
                     // Wrap raw RGB data into OpenCV Mat
                     cv::Mat image_mat(height, width, CV_8UC3, (void*)map.data);
-                    m_ImageSystem->ImageCallback(proc.index, image_mat);
+                    m_ImageSystem->ImageCallback(proc.index, image_mat, (float)par_num/(float)par_den);
                     proc.last_frame_timestamp = timestamp;
                     gst_buffer_unmap(buffer, &map);
                 }
@@ -68,7 +70,7 @@ void ImageSystemBackendGST::addSink(short port)
         "udpsrc port=" + std::to_string(port) + " "
         "caps=\"application/x-rtp, media=video, encoding-name=H264, payload=96\" ! "
         "rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! "
-        "video/x-raw,format=RGB ! queue max-size-buffers=1 leaky=downstream ! "
+        "video/x-raw,format=BGR ! queue max-size-buffers=1 leaky=downstream ! "
         "appsink name=" + sink_name;
 
     printf("Launching: %s\n", launch_string.c_str());

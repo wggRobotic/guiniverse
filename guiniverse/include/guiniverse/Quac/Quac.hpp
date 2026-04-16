@@ -8,7 +8,9 @@
 
 #include <atomic>
 #include <mutex>
+#include <rclcpp/time.hpp>
 #include "geometry_msgs/msg/twist.hpp"
+#include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
 
@@ -79,6 +81,10 @@ private:
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr m_TwistPublisher;
     geometry_msgs::msg::Twist m_TwistMessage;
+
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr m_IPPublisher;
+    std_msgs::msg::String m_IPMessage;
+    rclcpp::Time m_LastIPTime;
 
     rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr m_ImuSubscriber;
     rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr m_MagneticFieldSubscriber;
